@@ -37,9 +37,18 @@ def checks(raw, field):
         raise ValueError(f'Invalid public {field}; expected reviewed check IDs and booleans')
     return value
 
+def make_public_directories(path):
+    missing = []
+    while not path.exists():
+        missing.append(path)
+        path = path.parent
+    for directory in reversed(missing):
+        directory.mkdir()
+        directory.chmod(0o755)
+
+
 def write(path, value):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, ensure_ascii=False, indent=2)+'\n')
+    path.write_text(json.dumps(value, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
@@ -66,7 +75,7 @@ def main():
         records.append(row)
     pending = [(output/'results/historical-records.json', records)]
     for name in REPORTS:
-        raw=json.loads((archive/'reports'/name/'summary.json').read_text())
+        raw=json.loads((archive/'reports'/name/'summary.json').read_text(encoding='utf-8'))
         row={k:raw[k] for k in SUMMARY if k in raw}
         row['questions']=[{k:q[k] for k in ROW if k in q} for q in raw['questions']]
         row['costUSD']=None
@@ -86,7 +95,7 @@ def main():
     staged = []
     try:
         for path, value in pending:
-            path.parent.mkdir(parents=True, exist_ok=True)
+            make_public_directories(path.parent)
             fd, name = tempfile.mkstemp(prefix='.history-export-', dir=path.parent)
             os.close(fd)
             temporary = Path(name)

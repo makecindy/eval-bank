@@ -61,6 +61,33 @@ class ExportTests(unittest.TestCase):
                     target = self.output / 'reports' / name / 'summary.json'
                     self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o644)
 
+    @unittest.skipUnless(os.name == 'posix', 'POSIX file-mode semantics')
+    def test_new_directories_readable_under_restrictive_umask(self):
+        self.output.chmod(0o700)
+        for output in (self.output, self.root / 'fresh' / 'public'):
+            old_umask = os.umask(0o077)
+            try:
+                result = self.run_export(output)
+            finally:
+                os.umask(old_umask)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            for directory in (output / 'reports', *(output / 'reports' / name for name in export.REPORTS)):
+                self.assertEqual(stat.S_IMODE(directory.stat().st_mode), 0o755)
+        self.assertEqual(stat.S_IMODE(self.output.stat().st_mode), 0o700)
+        self.assertEqual(stat.S_IMODE((self.root / 'fresh').stat().st_mode), 0o755)
+        self.assertEqual(stat.S_IMODE((self.root / 'fresh/public').stat().st_mode), 0o755)
+
+    def test_utf8_export_with_utf8_mode_disabled(self):
+        for name in export.REPORTS:
+            path = self.archive / 'reports' / name / 'summary.json'
+            path.write_text(json.dumps({'questions': [{'name': '中文题目', 'scoreExact': '1/3'}]}, ensure_ascii=False), encoding='utf-8')
+        env = {**os.environ, 'LC_ALL': 'C', 'LANG': 'C', 'PYTHONUTF8': '0', 'PYTHONCOERCECLOCALE': '0'}
+        result = subprocess.run([sys.executable, str(SCRIPT), str(self.archive), str(self.output)], env=env, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for name in export.REPORTS:
+            value = json.loads((self.output / 'reports' / name / 'summary.json').read_text(encoding='utf-8'))
+            self.assertEqual(value['questions'][0], {'name': '中文题目', 'scoreExact': '1/3'})
+
     def test_overlapping_directories(self):
         for path in (self.archive, self.archive / 'export', self.root):
             with self.subTest(path=path):
