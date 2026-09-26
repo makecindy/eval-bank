@@ -2,6 +2,8 @@
 import argparse
 import hashlib
 import json
+import os
+import tempfile
 from pathlib import Path
 
 FIELDS = ('runId','configurationId','model','harness','effort','questionId','revision','manifestSha256','scoreExact','score','status','sampleKind','executionChannel','startUtc','endUtc','timeSource','costUSD','items','regressions')
@@ -46,12 +48,13 @@ def main():
         p.error('No historical records found; refusing to replace public results')
     records=[]
     for source in sources:
-        raw=json.loads(source.read_text())
+        source_bytes = source.read_bytes()
+        raw=json.loads(source_bytes)
         row={k:raw[k] for k in FIELDS if k in raw}
         for field in CHECK_KEYS:
             if field in raw:
                 row[field] = checks(raw, field)
-        row['sourceRecordSha256']=hashlib.sha256(source.read_bytes()).hexdigest()
+        row['sourceRecordSha256']=hashlib.sha256(source_bytes).hexdigest()
         row.setdefault('costUSD',None)
         row['evidenceAvailability']='Original evidence retained privately; not bundled in this export'
         records.append(row)
@@ -64,16 +67,29 @@ def main():
         pending.append((output/'reports'/name/'summary.json', row))
     # Validate all inputs and destinations before the first write, including
     # aliases in existing output trees. Never follow an output symlink.
-    input_paths = sources + [archive/'reports'/name/'summary.json' for name in REPORTS]
     for path, _ in pending:
         if overlap(archive, path.resolve()):
             p.error('Output destination overlaps the private archive')
         if any(part.is_symlink() for part in (path, *path.parents)):
             p.error('Output destinations must not contain symlinks')
-        if path.exists() and any(path.samefile(source) for source in input_paths):
-            p.error('Output destination aliases a private source')
-    for path, value in pending:
-        write(path, value)
+        if path.exists() and (not path.is_file() or path.stat().st_nlink != 1):
+            p.error('Output destination must be a regular file with a single link')
+    # Finish every serialization and write before replacing any public file.
+    # Stage beside each destination so replacement stays on the same filesystem.
+    staged = []
+    try:
+        for path, value in pending:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            fd, name = tempfile.mkstemp(prefix='.history-export-', dir=path.parent)
+            os.close(fd)
+            temporary = Path(name)
+            staged.append((temporary, path))
+            write(temporary, value)
+        for temporary, path in staged:
+            temporary.replace(path)
+    finally:
+        for temporary, _ in staged:
+            temporary.unlink(missing_ok=True)
     print(f'Exported {len(records)} historical records and 3 suite summaries')
 
 if __name__=='__main__':main()

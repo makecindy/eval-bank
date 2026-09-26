@@ -1,10 +1,12 @@
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 SCRIPT = Path(__file__).resolve().parents[1] / 'scripts/export-history.py'
 spec = importlib.util.spec_from_file_location('export_history', SCRIPT)
@@ -66,6 +68,58 @@ class ExportTests(unittest.TestCase):
         original = self.source.read_bytes()
         self.assertNotEqual(self.run_export().returncode, 0)
         self.assertEqual(self.source.read_bytes(), original)
+
+    def test_unrelated_private_hardlink(self):
+        private = self.archive / 'unrelated.txt'
+        private.write_text('private original')
+        self.target.unlink()
+        self.target.hardlink_to(private)
+        self.assertNotEqual(self.run_export().returncode, 0)
+        self.assertEqual(private.read_text(), 'private original')
+
+    def test_provenance_uses_parsed_bytes(self):
+        original = self.source.read_bytes()
+        read = Path.read_bytes
+        reads = []
+        def changing_read(path):
+            data = read(path)
+            if path == self.source.resolve():
+                reads.append(path)
+                path.write_text('{"scoreExact":"0"}')
+            return data
+        with patch.object(Path, 'read_bytes', changing_read), patch.object(sys, 'argv', [str(SCRIPT), str(self.archive), str(self.output)]):
+            export.main()
+        result = json.loads(self.target.read_text())[0]
+        self.assertEqual(len(reads), 1)
+        self.assertEqual(result['scoreExact'], '1/3')
+        self.assertEqual(result['sourceRecordSha256'], hashlib.sha256(original).hexdigest())
+
+    def test_late_parent_failure_preserves_export(self):
+        parent = self.output / 'reports' / export.REPORTS[-1]
+        parent.parent.mkdir(parents=True)
+        parent.write_text('not a directory')
+        self.assert_failure_preserves()
+        self.assertEqual(list(self.output.rglob('.history-export-*')), [])
+
+    def test_late_staging_write_failure_preserves_all_exports(self):
+        for name in export.REPORTS:
+            target = self.output / 'reports' / name / 'summary.json'
+            target.parent.mkdir(parents=True)
+            target.write_text('old summary')
+        before = {p: p.read_bytes() for p in self.output.rglob('*.json')}
+        write = export.write
+        count = 0
+        def fail_later(path, value):
+            nonlocal count
+            count += 1
+            if count == 3:
+                raise OSError('simulated disk write failure')
+            write(path, value)
+        with patch.object(export, 'write', fail_later), patch.object(sys, 'argv', [str(SCRIPT), str(self.archive), str(self.output)]):
+            with self.assertRaises(OSError):
+                export.main()
+        self.assertEqual(before, {p: p.read_bytes() for p in self.output.rglob('*.json')})
+        self.assertEqual(list(self.output.rglob('.history-export-*')), [])
 
     def test_missing_records(self):
         self.source.unlink()
