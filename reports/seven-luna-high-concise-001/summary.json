@@ -1,0 +1,114 @@
+{
+  "status": "complete",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "fast": false,
+  "suite": "seven-question-quality-v2",
+  "condition": "concise-prompt-v1",
+  "timeLimitInPrompt": false,
+  "completedAt": "2026-09-24T11:09:39.903596+00:00",
+  "totalExact": "9949/2090",
+  "total": 4.760287081339713,
+  "maximum": 7,
+  "meanExact": "9949/14630",
+  "mean": 0.680041011619959,
+  "limitations": [
+    "Single independent Orca Worker sample per question, not repeated-run population estimate",
+    "Concise prompt overlay authorized; frozen grader and business inputs unchanged",
+    "Worker self-tests not scores; independent frozen grader results used",
+    "Token and cost not collected in this report"
+  ],
+  "promptNormalization": "Original submissions retained; only authorized TASK.md/PROMPT.md overlays restored in separate grading copies for protected-input gate",
+  "questions": [
+    {
+      "question": "audio",
+      "name": "音频 v2",
+      "scoreExact": "1",
+      "score": 1.0,
+      "executionChannel": "Orca Worker",
+      "failedItems": []
+    },
+    {
+      "question": "island",
+      "name": "灵动岛 v2",
+      "scoreExact": "9/11",
+      "score": 0.8181818181818182,
+      "executionChannel": "Orca Worker",
+      "failedItems": [
+        "I04",
+        "I06"
+      ]
+    },
+    {
+      "question": "recovery",
+      "name": "自动恢复 v2",
+      "scoreExact": "16/19",
+      "score": 0.8421052631578947,
+      "executionChannel": "Orca Worker",
+      "failedItems": [
+        "R04",
+        "R08",
+        "R17"
+      ]
+    },
+    {
+      "question": "composer",
+      "name": "输入框发送 v2",
+      "scoreExact": "8/9",
+      "score": 0.8888888888888888,
+      "executionChannel": "Orca Worker",
+      "failedItems": [
+        "C09",
+        "C10"
+      ]
+    },
+    {
+      "question": "mobile-stream-order",
+      "name": "手机消息顺序 v3",
+      "scoreExact": "1/4",
+      "score": 0.25,
+      "executionChannel": "Orca Worker",
+      "failedItems": [
+        "C02",
+        "C03",
+        "C04"
+      ]
+    },
+    {
+      "question": "remote-files-bughunt",
+      "name": "远程文件 v4",
+      "scoreExact": "7/20",
+      "score": 0.35,
+      "executionChannel": "Orca Worker",
+      "failedItems": [
+        "V01core",
+        "V01edge",
+        "V02core",
+        "V02edge",
+        "V02guard",
+        "V03edge",
+        "V04guard",
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B03b"
+      ]
+    },
+    {
+      "question": "task-switch-cache",
+      "name": "D02 v3",
+      "scoreExact": "11/18",
+      "score": 0.6111111111111112,
+      "executionChannel": "Orca Worker",
+      "failedItems": [
+        "parsing-negative",
+        "parsing-markdown",
+        "media-handoff",
+        "cards-ownership",
+        "bounded-reuse-lru"
+      ]
+    }
+  ],
+  "costUSD": null
+}

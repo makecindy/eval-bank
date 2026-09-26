@@ -1,0 +1,94 @@
+{
+  "status": "complete",
+  "model": "mimo-v2.6-pro",
+  "effort": "default",
+  "fast": false,
+  "suite": "seven-question-quality-v2",
+  "condition": "concise-prompt-v1",
+  "timeLimitInPrompt": false,
+  "completedAt": "2026-09-25T06:07:56.869506+00:00",
+  "totalExact": "246863/37620",
+  "total": 6.562014885699096,
+  "maximum": 7,
+  "meanExact": "246863/263340",
+  "mean": 0.9374306979570137,
+  "limitations": [
+    "Single independent Orca Worker sample per question, not repeated-run population estimate",
+    "Concise prompt overlay authorized; frozen grader and business inputs unchanged",
+    "Worker self-tests not scores; independent frozen grader results used",
+    "Token and cost not collected in this report"
+  ],
+  "promptNormalization": "Original submissions retained; only authorized TASK.md/PROMPT.md overlays restored in separate grading copies for protected-input gate",
+  "questions": [
+    {
+      "question": "audio",
+      "name": "音频 v2",
+      "scoreExact": "1",
+      "score": 1.0,
+      "executionChannel": "Orca Worker",
+      "failedItems": []
+    },
+    {
+      "question": "island",
+      "name": "灵动岛 v2",
+      "scoreExact": "10/11",
+      "score": 0.9090909090909091,
+      "executionChannel": "Orca Worker",
+      "failedItems": [
+        "I06"
+      ]
+    },
+    {
+      "question": "recovery",
+      "name": "自动恢复 v2",
+      "scoreExact": "18/19",
+      "score": 0.9473684210526315,
+      "executionChannel": "Orca Worker",
+      "failedItems": [
+        "R20"
+      ]
+    },
+    {
+      "question": "composer",
+      "name": "输入框发送 v2",
+      "scoreExact": "8/9",
+      "score": 0.8888888888888888,
+      "executionChannel": "Orca Worker",
+      "failedItems": [
+        "C09",
+        "C10"
+      ]
+    },
+    {
+      "question": "mobile-stream-order",
+      "name": "手机消息顺序 v3",
+      "scoreExact": "1",
+      "score": 1.0,
+      "executionChannel": "Orca Worker",
+      "failedItems": []
+    },
+    {
+      "question": "remote-files-bughunt",
+      "name": "远程文件 v4",
+      "scoreExact": "9/10",
+      "score": 0.9,
+      "executionChannel": "Orca Worker",
+      "failedItems": [
+        "V02core",
+        "V02edge",
+        "V02guard"
+      ]
+    },
+    {
+      "question": "task-switch-cache",
+      "name": "D02 v3",
+      "scoreExact": "11/12",
+      "score": 0.9166666666666666,
+      "executionChannel": "Orca Worker",
+      "failedItems": [
+        "parsing-negative"
+      ]
+    }
+  ],
+  "costUSD": null
+}
