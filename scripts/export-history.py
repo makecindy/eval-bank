@@ -11,6 +11,7 @@ import os
 import math
 import re
 from fractions import Fraction
+from datetime import datetime
 import stat
 import tempfile
 from pathlib import Path
@@ -96,6 +97,22 @@ def public_questions(raw):
             raise ValueError('Inconsistent summary numeric aggregate')
     return rows
 
+def validate_summary(raw):
+    if not isinstance(raw, dict):
+        raise ValueError('Invalid summary object')
+    for field in ('model', 'effort', 'suite', 'condition', 'completedAt'):
+        if not isinstance(raw.get(field), str) or not raw[field].strip():
+            raise ValueError('Missing or invalid summary metadata: ' + field)
+    if raw.get('status') != 'complete':
+        raise ValueError('Invalid summary status')
+    for field in ('fast', 'timeLimitInPrompt'):
+        if type(raw.get(field)) is not bool:
+            raise ValueError('Invalid summary boolean: ' + field)
+    if 'harness' in raw and (not isinstance(raw['harness'], str) or not raw['harness'].strip()):
+        raise ValueError('Invalid summary harness')
+    if datetime.fromisoformat(raw['completedAt'].replace('Z', '+00:00')).tzinfo is None:
+        raise ValueError('Summary completion time requires a timezone')
+
 def overlap(left, right):
     return left == right or left in right.parents or right in left.parents
 
@@ -135,10 +152,14 @@ def main():
     if not sources:
         p.error('No historical records found; refusing to replace public results')
     records=[]
+    run_ids=set()
     for source in sources:
         source_bytes = source.read_bytes()
         raw=json.loads(source_bytes)
         validate_record(raw)
+        if raw['runId'] in run_ids:
+            raise ValueError('Duplicate historical runId')
+        run_ids.add(raw['runId'])
         row={k:raw[k] for k in FIELDS if k in raw}
         for field in CHECK_KEYS:
             if field in raw:
@@ -150,6 +171,7 @@ def main():
     pending = [(output/'results/historical-records.json', records)]
     for name in REPORTS:
         raw=json.loads((archive/'reports'/name/'summary.json').read_text(encoding='utf-8'))
+        validate_summary(raw)
         row={k:raw[k] for k in SUMMARY if k in raw}
         row['questions']=public_questions(raw)
         row['costUSD']=None

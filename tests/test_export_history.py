@@ -31,7 +31,10 @@ class ExportTests(unittest.TestCase):
         for name in export.REPORTS:
             p = self.archive / 'reports' / name / 'summary.json'
             p.parent.mkdir(parents=True)
-            p.write_text(json.dumps({'maximum': 7, 'totalExact': '7/3', 'total': 7/3,
+            p.write_text(json.dumps({'status': 'complete', 'model': 'fixture', 'effort': 'high',
+                                    'suite': 'fixture', 'condition': 'fixture', 'fast': False,
+                                    'timeLimitInPrompt': False, 'completedAt': '2026-09-24T00:00:00Z',
+                                    'maximum': 7, 'totalExact': '7/3', 'total': 7/3,
                                     'meanExact': '1/3', 'mean': 1/3,
                                     'questions': [{'question': q, 'scoreExact': '1/3', 'failedItems': []} for q in export.FAILED_IDS], 'secret': 'SECRET'}))
         self.target = self.output / 'results/historical-records.json'
@@ -218,7 +221,38 @@ class ExportTests(unittest.TestCase):
             self.assertEqual(json.dumps(row), before)
         for name in export.REPORTS:
             raw = json.loads((SCRIPT.parents[1] / 'reports' / name / 'summary.json').read_text(encoding='utf-8'))
+            before = json.dumps(raw)
+            export.validate_summary(raw)
             self.assertEqual(export.public_questions(raw), raw['questions'])
+            self.assertEqual(json.dumps(raw), before)
+
+    def test_duplicate_run_identity_preserves_output(self):
+        copy = self.source.with_name('renamed.json')
+        copy.write_bytes(self.source.read_bytes())
+        self.assert_failure_preserves()
+        raw = json.loads(copy.read_text())
+        raw['scoreExact'] = '1/2'
+        copy.write_text(json.dumps(raw))
+        self.assert_failure_preserves()
+        raw['runId'] = 'distinct-run'
+        copy.write_text(json.dumps(raw))
+        self.assertEqual(self.run_export().returncode, 0)
+        self.assertEqual(len(json.loads(self.target.read_text())), 2)
+
+    def test_summary_metadata_required_before_replacement(self):
+        target = self.archive / 'reports' / export.REPORTS[-1] / 'summary.json'
+        valid = json.loads(target.read_text())
+        for field in ('status', 'model', 'effort', 'suite', 'condition', 'fast', 'timeLimitInPrompt', 'completedAt'):
+            for value in (None, {}, [], 0, ''):
+                with self.subTest(field=field, value=value):
+                    raw = {**valid, field: value}
+                    if value is None:
+                        del raw[field]
+                    target.write_text(json.dumps(raw))
+                    self.assert_failure_preserves()
+        for changes in ({'status': 'running'}, {'completedAt': '2026-09-24T00:00:00'}, {'harness': []}):
+            target.write_text(json.dumps({**valid, **changes}))
+            self.assert_failure_preserves()
 
     def test_incomplete_duplicate_and_inconsistent_summary_preserve_output(self):
         target = self.archive / 'reports' / export.REPORTS[-1] / 'summary.json'
