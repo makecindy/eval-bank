@@ -3,6 +3,8 @@
 Run only in trusted local trees whose contents and directory structure remain
 unchanged for the duration of the export. Path checks prevent accidental aliases;
 they are not a security boundary against concurrent filesystem modification.
+Export to a maintainer-owned review directory, not a live deployment tree.
+Replacement preserves POSIX mode bits, not ownership, ACLs or extended attributes.
 """
 import argparse
 import hashlib
@@ -197,7 +199,7 @@ def main():
             temporary = Path(name)
             staged.append((temporary, path))
             write(temporary, value)
-            # Keep an existing access policy; new reviewed public exports are readable.
+            # Preserve mode bits only; deployment ownership and ACLs are out of scope.
             temporary.chmod(stat.S_IMODE(path.stat().st_mode) if path.exists() else 0o644)
         for temporary, path in staged:
             temporary.replace(path)
