@@ -31,7 +31,9 @@ class ExportTests(unittest.TestCase):
         for name in export.REPORTS:
             p = self.archive / 'reports' / name / 'summary.json'
             p.parent.mkdir(parents=True)
-            p.write_text(json.dumps({'totalExact': '1/3', 'questions': [{'question': 'audio', 'scoreExact': '1/3', 'failedItems': []}], 'secret': 'SECRET'}))
+            p.write_text(json.dumps({'maximum': 7, 'totalExact': '7/3', 'total': 7/3,
+                                    'meanExact': '1/3', 'mean': 1/3,
+                                    'questions': [{'question': q, 'scoreExact': '1/3', 'failedItems': []} for q in export.FAILED_IDS], 'secret': 'SECRET'}))
         self.target = self.output / 'results/historical-records.json'
         self.target.parent.mkdir(parents=True)
         self.target.write_text('existing results')
@@ -82,7 +84,9 @@ class ExportTests(unittest.TestCase):
     def test_utf8_export_with_utf8_mode_disabled(self):
         for name in export.REPORTS:
             path = self.archive / 'reports' / name / 'summary.json'
-            path.write_text(json.dumps({'questions': [{'question': 'audio', 'name': '中文题目', 'scoreExact': '1/3', 'failedItems': []}]}, ensure_ascii=False), encoding='utf-8')
+            raw = json.loads(path.read_text())
+            raw['questions'][0]['name'] = '中文题目'
+            path.write_text(json.dumps(raw, ensure_ascii=False), encoding='utf-8')
         env = {**os.environ, 'LC_ALL': 'C', 'LANG': 'C', 'PYTHONUTF8': '0', 'PYTHONCOERCECLOCALE': '0'}
         result = subprocess.run([sys.executable, str(SCRIPT), str(self.archive), str(self.output)], env=env, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -214,8 +218,33 @@ class ExportTests(unittest.TestCase):
             self.assertEqual(json.dumps(row), before)
         for name in export.REPORTS:
             raw = json.loads((SCRIPT.parents[1] / 'reports' / name / 'summary.json').read_text(encoding='utf-8'))
-            for row in raw['questions']:
-                self.assertEqual(export.public_question(row), row)
+            self.assertEqual(export.public_questions(raw), raw['questions'])
+
+    def test_incomplete_duplicate_and_inconsistent_summary_preserve_output(self):
+        target = self.archive / 'reports' / export.REPORTS[-1] / 'summary.json'
+        valid = json.loads(target.read_text())
+        candidates = [dict(valid, questions=valid['questions'][:1]),
+                      dict(valid, questions=[valid['questions'][0]] * 7)]
+        candidates += [{**valid, key: value} for key, value in
+                       [('totalExact', '1'), ('total', 1), ('meanExact', '1'), ('mean', 1), ('maximum', 8)]]
+        row = {**valid['questions'][0], 'score': 0}
+        candidates.append({**valid, 'questions': [row, *valid['questions'][1:]]})
+        for raw in candidates:
+            with self.subTest(raw=raw):
+                target.write_text(json.dumps(raw))
+                self.assert_failure_preserves()
+
+    def test_numeric_mismatch_and_invalid_cost_preserve_output(self):
+        candidates = [{**self.valid_record, 'score': 0}]
+        candidates += [{**self.valid_record, 'costUSD': value} for value in
+                       (True, -1, float('nan'), float('inf'), '0', [], {'billing': 'private'})]
+        for raw in candidates:
+            with self.subTest(raw=raw):
+                self.source.write_text(json.dumps(raw))
+                self.assert_failure_preserves()
+        for cost in (None, 0, 0.25):
+            raw = {**self.valid_record, 'score': 1/3, 'costUSD': cost}
+            export.validate_record(raw)
 
     def test_nullable_environment_score_and_optional_checks_preserved(self):
         row = {**self.valid_record, 'status': 'environment_invalid', 'scoreExact': None, 'items': None, 'regressions': None}

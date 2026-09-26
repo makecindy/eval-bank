@@ -54,6 +54,8 @@ def validate_score(raw, nullable=False):
         value = raw['score']
         if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 1:
             raise ValueError('Invalid public numeric score')
+        if exact is None or not math.isclose(value, float(Fraction(exact)), rel_tol=1e-12, abs_tol=1e-12):
+            raise ValueError('Inconsistent public score representations')
 
 def validate_record(raw):
     if not isinstance(raw, dict) or any(not isinstance(raw.get(k), str) or not raw[k].strip() for k in IDENTITY):
@@ -63,6 +65,9 @@ def validate_record(raw):
     if raw.get('status') not in ('graded', 'environment_invalid'):
         raise ValueError('Invalid public result status')
     validate_score(raw, nullable=raw['status'] == 'environment_invalid')
+    cost = raw.get('costUSD')
+    if cost is not None and (type(cost) not in (int, float) or not math.isfinite(cost) or cost < 0):
+        raise ValueError('Invalid public costUSD')
 
 def public_question(raw):
     if not isinstance(raw, dict) or not isinstance(raw.get('question'), str) or raw['question'] not in FAILED_IDS:
@@ -72,6 +77,24 @@ def public_question(raw):
     if not isinstance(failed, list) or any(not isinstance(item, str) or item not in FAILED_IDS[raw['question']] for item in failed):
         raise ValueError('Invalid public failedItems; expected reviewed question-specific IDs')
     return {k: raw[k] for k in ROW if k in raw}
+
+def public_questions(raw):
+    questions = raw.get('questions')
+    if not isinstance(questions, list):
+        raise ValueError('Missing public summary questions')
+    rows = [public_question(q) for q in questions]
+    if len(rows) != len(FAILED_IDS) or {q['question'] for q in rows} != set(FAILED_IDS):
+        raise ValueError('Summary must contain all seven unique questions')
+    total = sum((Fraction(q['scoreExact']) for q in rows), Fraction(0))
+    if type(raw.get('maximum')) is not int or raw['maximum'] != len(FAILED_IDS):
+        raise ValueError('Invalid summary maximum')
+    for field, expected in (('total', total), ('mean', total / len(FAILED_IDS))):
+        exact, number = raw.get(field + 'Exact'), raw.get(field)
+        if not isinstance(exact, str) or not re.fullmatch(r'[0-9]+(?:/[1-9][0-9]*|\.[0-9]+)?', exact) or Fraction(exact) != expected:
+            raise ValueError('Inconsistent summary exact aggregate')
+        if type(number) not in (int, float) or not math.isfinite(number) or not math.isclose(number, float(expected), rel_tol=1e-12, abs_tol=1e-12):
+            raise ValueError('Inconsistent summary numeric aggregate')
+    return rows
 
 def overlap(left, right):
     return left == right or left in right.parents or right in left.parents
@@ -98,7 +121,7 @@ def make_public_directories(path):
 
 
 def write(path, value):
-    path.write_text(json.dumps(value, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+    path.write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False)+'\n', encoding='utf-8')
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
@@ -128,9 +151,7 @@ def main():
     for name in REPORTS:
         raw=json.loads((archive/'reports'/name/'summary.json').read_text(encoding='utf-8'))
         row={k:raw[k] for k in SUMMARY if k in raw}
-        if not isinstance(raw.get('questions'), list) or not raw['questions']:
-            raise ValueError('Missing public summary questions')
-        row['questions']=[public_question(q) for q in raw['questions']]
+        row['questions']=public_questions(raw)
         row['costUSD']=None
         pending.append((output/'reports'/name/'summary.json', row))
     # Validate all inputs and destinations before the first write, including
