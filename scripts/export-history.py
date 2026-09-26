@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import json
 import os
+import stat
 import tempfile
 from pathlib import Path
 
@@ -85,6 +86,8 @@ def main():
             temporary = Path(name)
             staged.append((temporary, path))
             write(temporary, value)
+            # Keep an existing access policy; new reviewed public exports are readable.
+            temporary.chmod(stat.S_IMODE(path.stat().st_mode) if path.exists() else 0o644)
         for temporary, path in staged:
             temporary.replace(path)
     finally:

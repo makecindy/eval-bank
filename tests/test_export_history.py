@@ -1,6 +1,8 @@
 import importlib.util
 import hashlib
 import json
+import os
+import stat
 from pathlib import Path
 import subprocess
 import sys
@@ -47,6 +49,17 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(result['scoreExact'], '1/3')
         self.assertEqual(result['items'], {'B01': True})
         self.assertNotIn('SECRET', self.target.read_text())
+
+    @unittest.skipUnless(os.name == 'posix', 'POSIX file-mode semantics')
+    def test_staging_preserves_existing_modes_and_new_public_readability(self):
+        for mode in (0o644, 0o600):
+            with self.subTest(mode=mode):
+                self.target.chmod(mode)
+                self.assertEqual(self.run_export().returncode, 0)
+                self.assertEqual(stat.S_IMODE(self.target.stat().st_mode), mode)
+                for name in export.REPORTS:
+                    target = self.output / 'reports' / name / 'summary.json'
+                    self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o644)
 
     def test_overlapping_directories(self):
         for path in (self.archive, self.archive / 'export', self.root):
