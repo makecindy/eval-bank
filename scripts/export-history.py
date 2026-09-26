@@ -1,4 +1,9 @@
-"""Export reviewed structural fields only; never publish logs or session bodies."""
+"""Export reviewed structural fields only; never publish logs or session bodies.
+
+Run only in trusted local trees whose contents and directory structure remain
+unchanged for the duration of the export. Path checks prevent accidental aliases;
+they are not a security boundary against concurrent filesystem modification.
+"""
 import argparse
 import hashlib
 import json
@@ -67,7 +72,8 @@ def main():
         row['costUSD']=None
         pending.append((output/'reports'/name/'summary.json', row))
     # Validate all inputs and destinations before the first write, including
-    # aliases in existing output trees. Never follow an output symlink.
+    # aliases in existing output trees. Reject symlinks present at validation.
+    # The caller must keep the trusted tree unchanged until export finishes.
     for path, _ in pending:
         if overlap(archive, path.resolve()):
             p.error('Output destination overlaps the private archive')
