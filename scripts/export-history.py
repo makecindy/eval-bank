@@ -8,6 +8,9 @@ import argparse
 import hashlib
 import json
 import os
+import math
+import re
+from fractions import Fraction
 import stat
 import tempfile
 from pathlib import Path
@@ -22,6 +25,53 @@ CHECK_KEYS = {
              | {f'V{i:02}{part}' for i in range(1, 8) for part in ('core', 'edge', 'guard')},
     'regressions': BUG_KEYS | {f'R{i:02}' for i in range(1, 5)},
 }
+
+# Frozen historical schema, not a general-purpose diagnostic exporter.
+IDENTITY = ('runId', 'configurationId', 'model', 'harness', 'effort',
+            'questionId', 'revision', 'manifestSha256', 'sampleKind', 'executionChannel')
+FAILED_IDS = {
+    'audio': set(),
+    'island': {'I04', 'I06'},
+    'recovery': {'R04', 'R08', 'R17', 'R20'},
+    'composer': {'C09', 'C10'},
+    'mobile-stream-order': {'C02', 'C03', 'C04'},
+    'remote-files-bughunt': {'B03', 'B03b', 'B04', 'B05', 'B06', 'V01core', 'V01edge',
+                            'V02core', 'V02edge', 'V02guard', 'V03edge', 'V03guard', 'V04guard'},
+    'task-switch-cache': {'parsing-negative', 'parsing-markdown', 'media-handoff',
+                          'cards-ownership', 'bounded-reuse-lru'},
+}
+
+def validate_score(raw, nullable=False):
+    exact = raw.get('scoreExact')
+    if 'scoreExact' not in raw or (exact is None and not nullable):
+        raise ValueError('Missing public exact score')
+    if exact is not None:
+        if not isinstance(exact, str) or not re.fullmatch(r'[0-9]+(?:/[1-9][0-9]*|\.[0-9]+)?', exact):
+            raise ValueError('Invalid public exact score')
+        if not 0 <= Fraction(exact) <= 1:
+            raise ValueError('Public exact score out of range')
+    if 'score' in raw and raw['score'] is not None:
+        value = raw['score']
+        if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 1:
+            raise ValueError('Invalid public numeric score')
+
+def validate_record(raw):
+    if not isinstance(raw, dict) or any(not isinstance(raw.get(k), str) or not raw[k].strip() for k in IDENTITY):
+        raise ValueError('Missing or invalid public result identity')
+    if not re.fullmatch(r'[a-f0-9]{64}', raw['manifestSha256']):
+        raise ValueError('Invalid public manifest hash')
+    if raw.get('status') not in ('graded', 'environment_invalid'):
+        raise ValueError('Invalid public result status')
+    validate_score(raw, nullable=raw['status'] == 'environment_invalid')
+
+def public_question(raw):
+    if not isinstance(raw, dict) or not isinstance(raw.get('question'), str) or raw['question'] not in FAILED_IDS:
+        raise ValueError('Invalid public summary question')
+    validate_score(raw)
+    failed = raw.get('failedItems')
+    if not isinstance(failed, list) or any(not isinstance(item, str) or item not in FAILED_IDS[raw['question']] for item in failed):
+        raise ValueError('Invalid public failedItems; expected reviewed question-specific IDs')
+    return {k: raw[k] for k in ROW if k in raw}
 
 def overlap(left, right):
     return left == right or left in right.parents or right in left.parents
@@ -65,6 +115,7 @@ def main():
     for source in sources:
         source_bytes = source.read_bytes()
         raw=json.loads(source_bytes)
+        validate_record(raw)
         row={k:raw[k] for k in FIELDS if k in raw}
         for field in CHECK_KEYS:
             if field in raw:
@@ -77,7 +128,9 @@ def main():
     for name in REPORTS:
         raw=json.loads((archive/'reports'/name/'summary.json').read_text(encoding='utf-8'))
         row={k:raw[k] for k in SUMMARY if k in raw}
-        row['questions']=[{k:q[k] for k in ROW if k in q} for q in raw['questions']]
+        if not isinstance(raw.get('questions'), list) or not raw['questions']:
+            raise ValueError('Missing public summary questions')
+        row['questions']=[public_question(q) for q in raw['questions']]
         row['costUSD']=None
         pending.append((output/'reports'/name/'summary.json', row))
     # Validate all inputs and destinations before the first write, including

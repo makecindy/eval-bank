@@ -25,11 +25,13 @@ class ExportTests(unittest.TestCase):
         self.output = self.root / 'public'
         self.source = self.archive / 'question-bank/results/one.json'
         self.source.parent.mkdir(parents=True)
-        self.source.write_text(json.dumps({'scoreExact': '1/3', 'items': {'B01': True}, 'regressions': {'R01': False}, 'privateNote': 'SECRET'}))
+        self.valid_record = {k: 'fixture' for k in export.IDENTITY}
+        self.valid_record.update(manifestSha256='a'*64, status='graded', scoreExact='1/3')
+        self.source.write_text(json.dumps({**self.valid_record, 'scoreExact': '1/3', 'items': {'B01': True}, 'regressions': {'R01': False}, 'privateNote': 'SECRET'}))
         for name in export.REPORTS:
             p = self.archive / 'reports' / name / 'summary.json'
             p.parent.mkdir(parents=True)
-            p.write_text(json.dumps({'totalExact': '1/3', 'questions': [{'scoreExact': '1/3'}], 'secret': 'SECRET'}))
+            p.write_text(json.dumps({'totalExact': '1/3', 'questions': [{'question': 'audio', 'scoreExact': '1/3', 'failedItems': []}], 'secret': 'SECRET'}))
         self.target = self.output / 'results/historical-records.json'
         self.target.parent.mkdir(parents=True)
         self.target.write_text('existing results')
@@ -80,13 +82,13 @@ class ExportTests(unittest.TestCase):
     def test_utf8_export_with_utf8_mode_disabled(self):
         for name in export.REPORTS:
             path = self.archive / 'reports' / name / 'summary.json'
-            path.write_text(json.dumps({'questions': [{'name': '中文题目', 'scoreExact': '1/3'}]}, ensure_ascii=False), encoding='utf-8')
+            path.write_text(json.dumps({'questions': [{'question': 'audio', 'name': '中文题目', 'scoreExact': '1/3', 'failedItems': []}]}, ensure_ascii=False), encoding='utf-8')
         env = {**os.environ, 'LC_ALL': 'C', 'LANG': 'C', 'PYTHONUTF8': '0', 'PYTHONCOERCECLOCALE': '0'}
         result = subprocess.run([sys.executable, str(SCRIPT), str(self.archive), str(self.output)], env=env, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         for name in export.REPORTS:
             value = json.loads((self.output / 'reports' / name / 'summary.json').read_text(encoding='utf-8'))
-            self.assertEqual(value['questions'][0], {'name': '中文题目', 'scoreExact': '1/3'})
+            self.assertEqual(value['questions'][0], {'question': 'audio', 'name': '中文题目', 'scoreExact': '1/3', 'failedItems': []})
 
     def test_overlapping_directories(self):
         for path in (self.archive, self.archive / 'export', self.root):
@@ -173,7 +175,7 @@ class ExportTests(unittest.TestCase):
         for field in ('items', 'regressions'):
             for value in ({'B01': 'SECRET'}, {'private/path': True}, {'B01': {'details': 'SECRET'}}, ['SECRET']):
                 with self.subTest(field=field, value=value):
-                    self.source.write_text(json.dumps({field: value}))
+                    self.source.write_text(json.dumps({**self.valid_record, field: value}))
                     self.assert_failure_preserves()
 
     def test_existing_public_checks_accepted_without_change(self):
@@ -182,6 +184,46 @@ class ExportTests(unittest.TestCase):
             for field in export.CHECK_KEYS:
                 if field in row:
                     self.assertEqual(export.checks(row, field), row[field])
+
+    def test_incomplete_or_wrong_record_rejected_before_writes(self):
+        candidates = [{}, [], None]
+        for field in (*export.IDENTITY, 'status', 'scoreExact'):
+            row = dict(self.valid_record)
+            del row[field]
+            candidates.append(row)
+            candidates.append({**self.valid_record, field: {'diagnostic': 'SECRET'}})
+        candidates += [{**self.valid_record, 'scoreExact': value} for value in (True, 1, '1/0', '2', None, 'private/path')]
+        candidates += [{**self.valid_record, 'score': value} for value in (True, '1', float('nan'), float('inf'))]
+        for row in candidates:
+            with self.subTest(row=row):
+                self.source.write_text(json.dumps(row))
+                self.assert_failure_preserves()
+
+    def test_failed_item_values_rejected_before_writes(self):
+        target = self.archive / 'reports' / export.REPORTS[-1] / 'summary.json'
+        for value in (None, 'I04', {}, [False], [['I04']], ['/private/path'], ['token=SECRET'], ['C09']):
+            with self.subTest(value=value):
+                target.write_text(json.dumps({'questions': [{'question': 'island', 'scoreExact': '1/3', 'failedItems': value}]}))
+                self.assert_failure_preserves()
+
+    def test_all_public_records_and_summaries_are_unchanged_by_validation(self):
+        records = json.loads((SCRIPT.parents[1] / 'results/historical-records.json').read_text(encoding='utf-8'))
+        for row in records:
+            before = json.dumps(row)
+            export.validate_record(row)
+            self.assertEqual(json.dumps(row), before)
+        for name in export.REPORTS:
+            raw = json.loads((SCRIPT.parents[1] / 'reports' / name / 'summary.json').read_text(encoding='utf-8'))
+            for row in raw['questions']:
+                self.assertEqual(export.public_question(row), row)
+
+    def test_nullable_environment_score_and_optional_checks_preserved(self):
+        row = {**self.valid_record, 'status': 'environment_invalid', 'scoreExact': None, 'items': None, 'regressions': None}
+        self.source.write_text(json.dumps(row))
+        self.assertEqual(self.run_export().returncode, 0)
+        result = json.loads(self.target.read_text())
+        for field in ('scoreExact', 'items', 'regressions'):
+            self.assertIsNone(result[0][field])
 
 
 if __name__ == '__main__':
