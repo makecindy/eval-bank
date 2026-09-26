@@ -1,0 +1,88 @@
+{
+  "previous": "legacy-normalized-v1",
+  "current": "v2",
+  "principle": "all prior scored capabilities retained; extra scenarios combine actual supported events; no model scores inferred",
+  "sourceScope": "apps/desktop/src/main/agent-island/",
+  "mapping": [
+    {
+      "id": "I01",
+      "name": "通知点击立即收起，不受最短驻留期限制",
+      "requiredSourceItems": [
+        "early notification click",
+        "notification click after minimum dwell"
+      ]
+    },
+    {
+      "id": "I02",
+      "name": "导航尚未确认时保留未读",
+      "requiredSourceItems": [
+        "no navigation acknowledgement preserves unread"
+      ]
+    },
+    {
+      "id": "I03",
+      "name": "显式已读确认后清除未读",
+      "requiredSourceItems": [
+        "explicit read acknowledgement clears unread"
+      ]
+    },
+    {
+      "id": "I04",
+      "name": "点击后不轮换弹出旧队列中的另一条通知",
+      "requiredSourceItems": [
+        "click does not rotate another previous notification"
+      ]
+    },
+    {
+      "id": "I05",
+      "name": "残留指针不让已收起提示重新展开",
+      "requiredSourceItems": [
+        "remaining pointer does not re-open"
+      ]
+    },
+    {
+      "id": "I06",
+      "name": "迟到路由确认不关闭后来手动展开的界面",
+      "requiredSourceItems": [
+        "old route must preserve subsequent manual expansion",
+        "stack manual navigation and newer error"
+      ]
+    },
+    {
+      "id": "I07",
+      "name": "迟到路由确认不关闭同一任务的新错误提示",
+      "requiredSourceItems": [
+        "old route must preserve newer same-task error",
+        "two notification actions and stale route keep new reveal"
+      ]
+    },
+    {
+      "id": "I08",
+      "name": "空点击保持无操作",
+      "requiredSourceItems": [
+        "empty click remains a no-op"
+      ]
+    },
+    {
+      "id": "I09",
+      "name": "运行中条目导航保留原有行为",
+      "requiredSourceItems": [
+        "running-row navigation retains current behavior"
+      ]
+    },
+    {
+      "id": "I10",
+      "name": "岛外点击保留原有最短驻留保护",
+      "requiredSourceItems": [
+        "outside-click minimum dwell remains unchanged"
+      ]
+    },
+    {
+      "id": "I11",
+      "name": "主窗口导航交接时，已发布快照必须是 compact",
+      "requiredSourceItems": [
+        "published snapshot at navigation handoff is compact"
+      ]
+    }
+  ]
+}

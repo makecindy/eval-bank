@@ -1,0 +1,13 @@
+{
+  "name": "remote-file-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-strip-types --test test/*.test.mjs",
+    "build": "node --experimental-strip-types scripts/build.mjs",
+    "start": "node --experimental-strip-types scripts/demo.mjs"
+  },
+  "engines": {
+    "node": ">=22.18"
+  }
+}

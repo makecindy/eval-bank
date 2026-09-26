@@ -1,0 +1,44 @@
+import assert from 'node:assert/strict';import path from 'node:path';import {pathToFileURL}from'node:url';
+const [root,id]=process.argv.slice(2),url=f=>pathToFileURL(path.join(root,f)).href;
+globalThis.__projectionCalls=0;globalThis.__counts={projection:0,files:0,markdown:0};
+const m=await import(url('src/entry.js')),meta=await import(url('src/apps/desktop/src/renderer/components/chat/AgentActionRow.js')),proj=await import(url('src/apps/desktop/src/renderer/components/chat/MessageStream.js'));
+const ref=await import('../reference/src/entry.js');
+const counts=new Map(),nativeParse=JSON.parse;JSON.parse=function(s,...a){counts.set(s,(counts.get(s)||0)+1);return nativeParse.call(this,s,...a)};
+const parses=s=>counts.get(s)||0, builds=()=>globalThis.__projectionCalls;
+const rows=(id,content=id)=>[{clientId:id,role:'user',content}];
+const cold=(...args)=>m.buildCachedRenderItems(...args);
+const equal=(actual,expected)=>assert.deepEqual(actual,expected);
+const oracle=(...a)=>ref.buildRenderItems(...a);
+const hot=(...args)=>{const n=builds(),out=cold(...args);assert.equal(builds(),n,'hot access rebuilt full projection');equal(out,oracle(...args));return out};
+const M=32*1024*1024;
+const text=(n,tag='x')=>{const base=JSON.stringify({xdt_card_id:tag,pad:''});return base.slice(0,-2)+' '.repeat(n-base.length)+base.slice(-2)};
+function read(s){m.extractGhostCardId(s);m.extractAnchorCardId(s);return m.extractToolResultMedia(s)}
+function ledger(){assert(meta.toolMetadataCache instanceof Map,'OBSERVABILITY: metadata storage changed');assert(Array.isArray(proj.recentRenderProjections),'OBSERVABILITY: projection storage changed');return {meta:[...meta.toolMetadataCache.keys()].reduce((n,s)=>n+s.length,0),projection:proj.recentRenderProjections.reduce((n,e)=>n+e.dependencies[0].reduce((x,r)=>x+r.content.length,0),0)}}
+function semantics(args,next){const expected0=oracle(...args),expected1=oracle(...next);assert.notDeepEqual(expected0,expected1,'AUTHOR FIXTURE has no semantic difference');equal(cold(...args),expected0);equal(cold(...next),expected1);hot(...next)}
+m.setDataOwnerGeneration('scenario-'+id,1);ref.setDataOwnerGeneration('reference-'+id,1);
+const mediaText='{"xdt_card_id":"card","xdt_anchor_card_id":"anchor","xdt_image_urls":["cindy-media://a.png","cindy-media://b.png"]}';
+const tests={
+D01a(){const s='{ invalid xdt_card_id';for(let i=0;i<3;i++){equal(read(s),[]);assert.equal(m.extractGhostCardId(s),null)}assert.equal(parses(s),1)},
+D01b(){const s='{"xdt_card_id":"one"}',t=s.replace('one','two');read(s);read(s);assert.equal(parses(s),1);assert.equal(m.extractGhostCardId(t),'two');read(t);assert.equal(parses(t),1)},
+D02a(){let out=read(mediaText);assert.equal(out.length,2);out.pop();equal(m.extractToolResultMedia(mediaText).map(x=>x.url),['cindy-media://a.png','cindy-media://b.png']);assert.equal(parses(mediaText),1)},
+D02b(){const a=read(mediaText);a.push({kind:'image',url:'cindy-media://local.png'});assert.equal(m.extractToolResultMedia(mediaText).length,2);assert.equal(parses(mediaText),1)},
+D03a(){const r=[...rows('u'),{clientId:'t',role:'tool_use',content:'',toolUseId:'t',toolName:'Write',toolInput:{file_path:'report.md',content:'hello'}},{clientId:'r',role:'tool_result',toolUseId:'t',content:'ok'}];semantics([r,undefined,undefined,{workingDir:'/alpha'}],[r,undefined,undefined,{workingDir:'/beta'}]);assert(cold(r,undefined,undefined,{workingDir:'/beta'}).items.some(i=>i.files?.some(f=>f.path==='/beta/report.md')));
+ const b=[...rows('u2'),{clientId:'card',role:'assistant',content:'',systemCardType:'bot-session-task'},{clientId:'intro',role:'assistant',content:'I will help'}];semantics([b,undefined,undefined,{}],[b,undefined,undefined,{botSessionId:'bot'}]);},
+D03b(){const r=rows('user');const tasks=new Map([['bg',{taskId:'bg',taskType:'local_bash',status:'running',description:'work'}]]);semantics([r,tasks,undefined,{historyWindowIncomplete:false}],[r,tasks,undefined,{historyWindowIncomplete:true}]);const changed=new Map([['bg',{...tasks.get('bg'),status:'completed'}]]);semantics([r,tasks,undefined,{historyWindowIncomplete:true}],[r,changed,undefined,{historyWindowIncomplete:true}]);
+ const cs={id:'patch',anchorClientId:'user',cwd:'/alpha',files:[{path:'new.md',status:'added',additions:1,deletions:0}]};semantics([r,undefined,undefined,{turnChangeSets:[]}],[r,undefined,undefined,{turnChangeSets:[cs]}]);const s=[{clientId:'a',role:'assistant',content:'part',isStreaming:true}],n=[{...s[0],content:'complete',isStreaming:false}];semantics([s],[n]);},
+D04a(){cards(false)},D04b(){cards(true)},
+D05a(){const r=rows('same'),s='{"xdt_card_id":"owner"}';cold(r);read(s);hot(r);read(s);const b=builds(),p=parses(s);m.setDataOwnerGeneration('scenario-'+id,2);equal(cold(r),oracle(r));read(s);assert.equal(builds(),b+1);assert.equal(parses(s),p+1);hot(r);read(s);assert.equal(parses(s),p+1)},
+D05b(){const r=rows('same'),s='{"xdt_card_id":"owner"}';for(const [owner,g]of[['A',1],['B',1],['A',2]]){m.setDataOwnerGeneration(owner,g);const b=builds(),p=parses(s);equal(cold(r),oracle(r));read(s);assert.equal(builds(),b+1);assert.equal(parses(s),p+1);hot(r);read(s);assert.equal(parses(s),p+1)}},
+D06a(){const [a,b,c,d]=['a','b','c','d'].map(x=>rows(x));cold(a);cold(b);cold(c);hot(a);cold(d);hot(a);const n=builds();equal(cold(b),oracle(b));assert.equal(builds(),n+1)},
+D06b(){const [a,b,c,d]=['p','q','r','s'].map(x=>rows(x));cold(a,undefined,undefined,{markdownImageTargetCache:new Map()});cold(b);hot(a,undefined,undefined,{markdownImageTargetCache:new Map()});cold(c);hot(a,undefined,undefined,{markdownImageTargetCache:new Map()});cold(d);hot(a,undefined,undefined,{markdownImageTargetCache:new Map()});assert(proj.recentRenderProjections.length<=3);const n=builds();cold(b);assert.equal(builds(),n+1)},
+D07a(){const size=12*1024*1024;for(let i=0;i<3;i++){const s=text(size,String(i));assert.equal(m.extractGhostCardId(s),String(i));const r=rows(String(i),'x'.repeat(size));equal(cold(r),oracle(r));assert(ledger().meta<=M,'metadata retained text above budget');assert(ledger().projection<=M,'projection retained text above budget')}},
+D07b(){const s=text(M+3,'oversize');assert.equal(m.extractGhostCardId(s),'oversize');assert.equal(m.extractGhostCardId(s),'oversize');assert.equal(parses(s),2);assert(!meta.toolMetadataCache.has(s));const r=rows('oversize','😀'.repeat(M/2+1));const b=builds();for(let i=0;i<2;i++){const out=cold(r);assert.equal(out.items[0].message.content.length,M+2)}assert.equal(builds(),b+2);assert.equal(ledger().projection,0);
+ const exact=text(M,'exact');read(exact);read(exact);assert.equal(parses(exact),1);const exactRows=rows('exact','😀'.repeat(M/2));cold(exactRows);hot(exactRows);assert.equal(ledger().projection,M);
+ for(let i=0;i<513;i++)read(JSON.stringify({xdt_card_id:'small'+i}));assert(meta.toolMetadataCache.size<=512);for(let i=0;i<4;i++)cold(rows('small'+i));assert(proj.recentRenderProjections.length<=3)},
+R01(){for(const s of ['', 'plain output', '{"unrelated":42}']){equal(read(s),[]);assert.equal(m.extractGhostCardId(s),null);assert.equal(parses(s),0)}},
+R02(){const s='{"xdt_\\u0063ard_id":"escaped","xdt_image_url":"cindy-media://one.png","xdt_video_url":"cindy-media://v.mp4","xdt_audio_url":"cindy-media://a.mp3"}';assert.equal(m.extractGhostCardId(s),null);equal(m.extractToolResultMedia(s),ref.extractToolResultMedia(s));assert.equal(m.extractToolResultMedia(s)[0].kind,'image')},
+R03(){const r=[...rows('u'),{clientId:'a',role:'assistant',content:'![image](cindy-media://one.png)',isStreaming:false},{clientId:'tool',role:'tool_result',content:'{"xdt_image_url":"cindy-media://two.png"}'}];equal(cold(r),oracle(r))},
+R04(){equal(cold([]),oracle([]));const r=rows('readonly');Object.freeze(r[0]);Object.freeze(r);const before=JSON.stringify(r);equal(cold(r),oracle(r));assert.equal(JSON.stringify(r),before)}
+};
+function cards(reverse){const r=[{clientId:'call',role:'tool_use',content:'',toolUseId:'t',toolName:'mcp__cindy__ghost_call',toolInput:{ghost_id:'art'}},{clientId:'result',role:'tool_result',toolUseId:'t',content:'{"xdt_card_id":"card","xdt_image_url":"cindy-media://one.png"}'}];const ready={status:'ready',ghostId:'art',html:'<p>ready</p>',height:100},missing={status:'missing'};const map=new Map([['card',reverse?ready:missing]]),a={version:0,byCallId:map,liveCards:[]};const first=cold(r,undefined,a);assert(first.items.some(i=>i.type===(reverse?'ghost_card':'tool_media')));map.set('card',reverse?missing:ready);const b={...a,version:1};const next=cold(r,undefined,b);equal(next,oracle(r,undefined,b));assert(next.items.some(i=>i.type===(reverse?'tool_media':'ghost_card')));assert(!next.items.some(i=>i.type===(reverse?'ghost_card':'tool_media')));hot(r,undefined,b)}
+try{await tests[id]();console.log(JSON.stringify({id,pass:true,builds:builds()}))}catch(e){console.log(JSON.stringify({id,pass:false,error:e.message,stack:e.stack}));process.exitCode=1}

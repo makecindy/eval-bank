@@ -1,0 +1,1 @@
+const fs=require('node:fs'),path=require('node:path'); const root=path.resolve(__dirname,'..');process.chdir(root);fs.mkdirSync('tests',{recursive:true});fs.writeFileSync('tests/environment-probe.txt','probe');if(fs.readFileSync('tests/environment-probe.txt','utf8')!=='probe')throw Error('probe failed');console.log(JSON.stringify({writeRead:true,node:process.version,root}));

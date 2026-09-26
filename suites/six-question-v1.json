@@ -1,0 +1,36 @@
+{
+  "id": "six-question-v1",
+  "rule": "equal-question-mean-v1",
+  "questions": [
+    {
+      "id": "audio",
+      "revision": "legacy-normalized-v1",
+      "manifestSha256": "b46ce3fa18a7ddd030c5aee2d4c1188aa37b87ca3fab15c54a4ae39e1748bfbd"
+    },
+    {
+      "id": "island",
+      "revision": "legacy-normalized-v1",
+      "manifestSha256": "d5cd13aa759845398e6c6375a9b4c5f818dd54ba7f09a9b5b984c67eb7ccd769"
+    },
+    {
+      "id": "recovery",
+      "revision": "legacy-normalized-v1",
+      "manifestSha256": "db43ea6a2fd7b7ed18e7da0c7e32e7daaf6d4644834a8bfcd164aa359c026263"
+    },
+    {
+      "id": "composer",
+      "revision": "legacy-normalized-v1",
+      "manifestSha256": "f61555ebdedcdd196aea0d55f4c230c4f2a68949f4e48d85b02871df488f2ed2"
+    },
+    {
+      "id": "mobile-stream-order",
+      "revision": "legacy-normalized-v1",
+      "manifestSha256": "3b60a8127dfbe08f15bf6bdc71898c2e603e6eb552653fb89ab18aaf281c0ece"
+    },
+    {
+      "id": "remote-files-bughunt",
+      "revision": "v1",
+      "manifestSha256": "a5977e61a2793f39f03beeba5fea5875c501d330048e23c0e33a680f7fa2941d"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "d02-v2-pilot",
+  "rule": "equal-question-mean-v1",
+  "questions": [
+    {
+      "id": "task-switch-cache",
+      "revision": "v2",
+      "manifestSha256": "775ce54a5ef7271944fbb1ef9f8851a85ce53cd959449472960d416341c31f5e"
+    }
+  ]
+}

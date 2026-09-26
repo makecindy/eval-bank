@@ -1,0 +1,108 @@
+{
+  "id": "island",
+  "revision": "v2",
+  "title": "灵动岛通知与窗口交接：质量与组合场景升级",
+  "scoringVersion": "quality-composition-v1",
+  "groups": [
+    {
+      "id": "I01",
+      "weight": "1/11",
+      "mode": "all",
+      "items": [
+        "I01"
+      ]
+    },
+    {
+      "id": "I02",
+      "weight": "1/11",
+      "mode": "all",
+      "items": [
+        "I02"
+      ]
+    },
+    {
+      "id": "I03",
+      "weight": "1/11",
+      "mode": "all",
+      "items": [
+        "I03"
+      ]
+    },
+    {
+      "id": "I04",
+      "weight": "1/11",
+      "mode": "all",
+      "items": [
+        "I04"
+      ]
+    },
+    {
+      "id": "I05",
+      "weight": "1/11",
+      "mode": "all",
+      "items": [
+        "I05"
+      ]
+    },
+    {
+      "id": "I06",
+      "weight": "1/11",
+      "mode": "all",
+      "items": [
+        "I06"
+      ]
+    },
+    {
+      "id": "I07",
+      "weight": "1/11",
+      "mode": "all",
+      "items": [
+        "I07"
+      ]
+    },
+    {
+      "id": "I08",
+      "weight": "1/11",
+      "mode": "all",
+      "items": [
+        "I08"
+      ]
+    },
+    {
+      "id": "I09",
+      "weight": "1/11",
+      "mode": "all",
+      "items": [
+        "I09"
+      ]
+    },
+    {
+      "id": "I10",
+      "weight": "1/11",
+      "mode": "all",
+      "items": [
+        "I10"
+      ]
+    },
+    {
+      "id": "I11",
+      "weight": "1/11",
+      "mode": "all",
+      "items": [
+        "I11"
+      ]
+    }
+  ],
+  "changeNote": "Restore complete executable assets; retain prior capabilities and add event-composition checks; publish product choices before testing.",
+  "environment": "macOS arm64 bundled Node/esbuild; real state/service and virtual clock, no native window",
+  "graderCommand": [
+    "python3",
+    "-B",
+    "author/grade.py",
+    "{candidateRoot}",
+    "{outputJson}"
+  ],
+  "legacyAdapter": "data/current-results.json contributions plus source grade-result where absent",
+  "supersedes": "legacy-normalized-v1",
+  "status": "frozen"
+}

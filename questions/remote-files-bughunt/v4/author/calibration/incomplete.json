@@ -1,0 +1,28 @@
+{
+  "status": "graded",
+  "score": 0.925,
+  "items": {
+    "V01core": true,
+    "V01edge": true,
+    "V01guard": true,
+    "V02core": true,
+    "V02edge": true,
+    "V02guard": true,
+    "V03core": true,
+    "V03edge": false,
+    "V03guard": false,
+    "V04core": true,
+    "V04edge": true,
+    "V04guard": false,
+    "B01": true,
+    "B02": true,
+    "B03": true,
+    "B04": true,
+    "B05": true,
+    "B06": true,
+    "B03b": true
+  },
+  "questionId": "remote-files-bughunt",
+  "revision": "v4",
+  "scoringVersion": "quality-composition-v1"
+}

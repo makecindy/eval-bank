@@ -1,0 +1,21 @@
+{
+  "status": "graded",
+  "score": 0.9166666666666666,
+  "items": {
+    "parsing-negative": false,
+    "parsing-markdown": true,
+    "media-array-isolation": true,
+    "media-handoff": true,
+    "projection-context": true,
+    "projection-internal-change": true,
+    "cards-snapshot": true,
+    "cards-ownership": true,
+    "owner-generation": true,
+    "bounded-reuse-lru": true,
+    "bounded-reuse-quotas": true,
+    "bounded-reuse-accounting": true
+  },
+  "questionId": "task-switch-cache",
+  "revision": "v3",
+  "scoringVersion": "quality-composition-v1"
+}

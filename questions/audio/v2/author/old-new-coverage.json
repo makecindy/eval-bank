@@ -1,0 +1,72 @@
+{
+  "previous": "legacy-normalized-v1",
+  "current": "v2",
+  "principle": "all prior scored capabilities retained; extra scenarios combine actual supported events; no model scores inferred",
+  "sourceScope": "WebMicAudioEngine.ts、pcm16k-worklet.js；audioContextPool.ts 只读",
+  "groups": [
+    {
+      "id": "A01",
+      "weight": "1/8",
+      "mode": "all",
+      "items": [
+        "A01"
+      ]
+    },
+    {
+      "id": "A02",
+      "weight": "1/8",
+      "mode": "all",
+      "items": [
+        "A02"
+      ]
+    },
+    {
+      "id": "A03",
+      "weight": "1/8",
+      "mode": "all",
+      "items": [
+        "A03"
+      ]
+    },
+    {
+      "id": "A04",
+      "weight": "1/8",
+      "mode": "all",
+      "items": [
+        "A04"
+      ]
+    },
+    {
+      "id": "A05",
+      "weight": "1/8",
+      "mode": "all",
+      "items": [
+        "A05"
+      ]
+    },
+    {
+      "id": "A06",
+      "weight": "1/8",
+      "mode": "all",
+      "items": [
+        "A06"
+      ]
+    },
+    {
+      "id": "A07",
+      "weight": "1/8",
+      "mode": "all",
+      "items": [
+        "A07"
+      ]
+    },
+    {
+      "id": "A08",
+      "weight": "1/8",
+      "mode": "all",
+      "items": [
+        "A08"
+      ]
+    }
+  ]
+}

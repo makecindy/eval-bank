@@ -1,0 +1,161 @@
+{
+  "previous": "v3",
+  "current": "v4",
+  "principle": "all prior scored capabilities retained; extra scenarios combine actual supported events; no model scores inferred",
+  "sourceScope": "src/",
+  "groups": [
+    {
+      "id": "B01",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B01"
+      ]
+    },
+    {
+      "id": "B02",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B02"
+      ]
+    },
+    {
+      "id": "B03",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B03",
+        "B03b"
+      ]
+    },
+    {
+      "id": "B04",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B04"
+      ]
+    },
+    {
+      "id": "B05",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B05"
+      ]
+    },
+    {
+      "id": "B06",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B06"
+      ]
+    },
+    {
+      "id": "V01-core",
+      "weight": "1/20",
+      "mode": "all",
+      "items": [
+        "V01core"
+      ]
+    },
+    {
+      "id": "V01-edge",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V01core",
+        "V01edge"
+      ]
+    },
+    {
+      "id": "V01-guard",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V01core",
+        "V01guard"
+      ]
+    },
+    {
+      "id": "V02-core",
+      "weight": "1/20",
+      "mode": "all",
+      "items": [
+        "V02core"
+      ]
+    },
+    {
+      "id": "V02-edge",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V02core",
+        "V02edge"
+      ]
+    },
+    {
+      "id": "V02-guard",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V02core",
+        "V02guard"
+      ]
+    },
+    {
+      "id": "V03-core",
+      "weight": "1/20",
+      "mode": "all",
+      "items": [
+        "V03core"
+      ]
+    },
+    {
+      "id": "V03-edge",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V03core",
+        "V03edge"
+      ]
+    },
+    {
+      "id": "V03-guard",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V03core",
+        "V03guard"
+      ]
+    },
+    {
+      "id": "V04-core",
+      "weight": "1/20",
+      "mode": "all",
+      "items": [
+        "V04core"
+      ]
+    },
+    {
+      "id": "V04-edge",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V04core",
+        "V04edge"
+      ]
+    },
+    {
+      "id": "V04-guard",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V04core",
+        "V04guard"
+      ]
+    }
+  ]
+}

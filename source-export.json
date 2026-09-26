@@ -1,0 +1,6 @@
+{
+  "format": "eval-bank-source-v1",
+  "runtimeIndex": "releases/20260925/index.json",
+  "historicalVersions": "versions.json",
+  "note": "Git contains reviewable source subsets and reference overlays. Restore released runtime into a separate directory before grading. Historical import-only rows are not runnable."
+}

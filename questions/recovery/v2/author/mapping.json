@@ -1,0 +1,141 @@
+[
+  {
+    "id": "R01",
+    "name": "自动恢复接管后不提前报告失败",
+    "requiredSourceItems": [
+      "R01"
+    ]
+  },
+  {
+    "id": "R02",
+    "name": "同一失败后的配对 done 不算完成",
+    "requiredSourceItems": [
+      "R02"
+    ]
+  },
+  {
+    "id": "R03",
+    "name": "真实退避与再次派发成功后只交付最终完成",
+    "requiredSourceItems": [
+      "R03"
+    ]
+  },
+  {
+    "id": "R04",
+    "name": "续跑被拒或无法安全确认进度而放弃时，原错误准确收口",
+    "requiredSourceItems": [
+      "R04",
+      "R05",
+      "X03"
+    ]
+  },
+  {
+    "id": "R06",
+    "name": "连续重试直到真实额度耗尽才宣告失败",
+    "requiredSourceItems": [
+      "R06"
+    ]
+  },
+  {
+    "id": "R07",
+    "name": "用户新输入接手只补历史，不向 Lead 报旧失败",
+    "requiredSourceItems": [
+      "R07"
+    ]
+  },
+  {
+    "id": "R08",
+    "name": "零产出用户接手后的旧 done 与无 token running 不误完成",
+    "requiredSourceItems": [
+      "R08"
+    ]
+  },
+  {
+    "id": "R09",
+    "name": "接手的新轮能够正常派发和完成",
+    "requiredSourceItems": [
+      "R09",
+      "X01",
+      "X05"
+    ]
+  },
+  {
+    "id": "R10",
+    "name": "显式 Stop 不把自动恢复中的旧错误桥给 Lead",
+    "requiredSourceItems": [
+      "R10",
+      "X02"
+    ]
+  },
+  {
+    "id": "R11",
+    "name": "没有恢复资格的真实终态错误照常报告",
+    "requiredSourceItems": [
+      "R11"
+    ]
+  },
+  {
+    "id": "R12",
+    "name": "正常完成仍通过实际发送出口交给 Lead",
+    "requiredSourceItems": [
+      "R12"
+    ]
+  },
+  {
+    "id": "R13",
+    "name": "带 continuation 的 done 不结束 Worker",
+    "requiredSourceItems": [
+      "R13"
+    ]
+  },
+  {
+    "id": "R14",
+    "name": "供应商非终态 retry 提示不结束 Worker",
+    "requiredSourceItems": [
+      "R14"
+    ]
+  },
+  {
+    "id": "R15",
+    "name": "首次派发尚未持久化的 deferred 错误不伪造已接受工作",
+    "requiredSourceItems": [
+      "R15"
+    ]
+  },
+  {
+    "id": "R16",
+    "name": "首次持久化失败保留可重试入口，不发送虚假 Worker 终态",
+    "requiredSourceItems": [
+      "R16"
+    ]
+  },
+  {
+    "id": "R17",
+    "name": "新一次恢复拥有新错误，不在中间一次恢复后错误收口",
+    "requiredSourceItems": [
+      "R17"
+    ]
+  },
+  {
+    "id": "R18",
+    "name": "零产出时安全重发原输入而非凭空从中途继续",
+    "requiredSourceItems": [
+      "R18"
+    ]
+  },
+  {
+    "id": "R19",
+    "name": "新的 Lead 派发不被旧恢复计时器结束",
+    "requiredSourceItems": [
+      "R19",
+      "X04"
+    ]
+  },
+  {
+    "id": "R20",
+    "name": "会话关闭清理不会向 Lead 补发已撤销恢复的错误",
+    "requiredSourceItems": [
+      "R20"
+    ]
+  }
+]

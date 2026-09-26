@@ -1,0 +1,228 @@
+{
+  "version": "composer-pr3388-v1.5",
+  "formula": "mean of six equally weighted capability item pass ratios; item variants conjunctive; 13-item ratio diagnostic",
+  "items": [
+    {
+      "id": "C01",
+      "scenarios": [
+        "C01",
+        "C02"
+      ],
+      "name": "已有任务消息被接收后的浏览器更新边界，原文不滞留且提交正确",
+      "evidence": "原始用户需求；本机与 SSH 为同项变体",
+      "weight": 1,
+      "semantics": "Observe after one completed rendering opportunity via two requestAnimationFrame callbacks; allow synchronous or same-frame clearing; not proof of full production bubble/CSS rendering."
+    },
+    {
+      "id": "C03",
+      "scenarios": [
+        "C03"
+      ],
+      "name": "发送成功不吞下一条已输入的草稿",
+      "evidence": "原始发送体验及草稿保留约定",
+      "weight": 1
+    },
+    {
+      "id": "C04",
+      "scenarios": [
+        "C04"
+      ],
+      "name": "发送返回失败时恢复原文及格式，不重复、不增加空段",
+      "evidence": "原 PR 失败恢复契约",
+      "weight": 1
+    },
+    {
+      "id": "C05",
+      "scenarios": [
+        "C05"
+      ],
+      "name": "发送抛错时保留原文和后续草稿",
+      "evidence": "失败恢复与数据保留契约",
+      "weight": 1
+    },
+    {
+      "id": "C06",
+      "scenarios": [
+        "C06"
+      ],
+      "name": "在途再次发送有明确处理且无重复提交，结算后可发送",
+      "evidence": "PR3388 inline comment 3852414692：避免可点击却静默丢弃；禁用/可见忙碌反馈/真实受理均可，权限实际写入未覆盖，菜单仅诊断",
+      "weight": 1
+    },
+    {
+      "id": "C07",
+      "scenarios": [
+        "C07",
+        "C07-hydration"
+      ],
+      "name": "发送后及引用解析期间切任务，正文与附件不串任务、不丢失",
+      "evidence": "任务草稿归属；与 r3852287847 同类风险，非语音用例本身",
+      "weight": 1,
+      "semantics": "Detached hydration may safely cancel retaining the source, or continue with source-owned recovery. Voice remains diagnostic."
+    },
+    {
+      "id": "C08",
+      "scenarios": [
+        "C08"
+      ],
+      "name": "A→B→A 后发送仍明确处理，任务隔离且可恢复",
+      "evidence": "PR3388 inline comment 3852558572：切回不可虚假可发送；按真实请求和交接验证，不指定锁实现",
+      "weight": 1
+    },
+    {
+      "id": "C09",
+      "scenarios": [
+        "C09",
+        "X01"
+      ],
+      "name": "A 结束不改变 B 的输入和发送状态",
+      "evidence": "review r3852699564",
+      "weight": 1
+    },
+    {
+      "id": "C10",
+      "scenarios": [
+        "C10"
+      ],
+      "name": "引用解析期间下一条草稿不混入本次提交",
+      "evidence": "review r3853464435；允许隔离 payload 后提前解锁的等价实现",
+      "weight": 1
+    },
+    {
+      "id": "C11",
+      "scenarios": [
+        "C11",
+        "C14"
+      ],
+      "name": "首页创建等待时不产生异常文档，安全保留或清空",
+      "evidence": "后续真实回归 session 29f1ff2c；单行与多行是同项变体",
+      "weight": 1,
+      "semantics": "Retain unchanged draft OR empty protected composer during pending creation. Recovery separately checked by C13, handoff by C12. No requirement for one implementation."
+    },
+    {
+      "id": "C12",
+      "scenarios": [
+        "C12"
+      ],
+      "name": "首页创建成功清空、导航并正确交接首条消息一次",
+      "evidence": "真实首页既有契约",
+      "weight": 1
+    },
+    {
+      "id": "C13",
+      "scenarios": [
+        "C13"
+      ],
+      "name": "首页创建失败保留原有完整文档",
+      "evidence": "首页回归及草稿保留契约",
+      "weight": 1
+    },
+    {
+      "id": "C17",
+      "scenarios": [
+        "C17"
+      ],
+      "name": "点击发送后无需重新聚焦即可输入下一条草稿（不重复计成功结算）",
+      "evidence": "review 5019098946; real Chromium click and keyboard, real focus hook",
+      "weight": 1
+    }
+  ],
+  "diagnosticsOnly": [
+    {
+      "id": "C15",
+      "name": "离开原任务后的语音定稿归属",
+      "evidence": "review r3852287847"
+    },
+    {
+      "id": "C16",
+      "name": "离开原任务后的语音失败恢复",
+      "evidence": "review r3852558581"
+    },
+    {
+      "id": "C06-permission",
+      "name": "权限菜单诊断",
+      "evidence": "实际权限IPC不支持，不计分"
+    }
+  ],
+  "diagnosticReason": "整个 useVoiceInput hook 是替身，尚不能证明真实语音恢复链路；不计分。",
+  "withdrawnFindings": [
+    "r3851155535 (withdrawn r3851295815)"
+  ],
+  "environmentFailureScore": null,
+  "scoringVersion": "capability-groups-v1.5",
+  "coreRequiredItems": [
+    "C01"
+  ],
+  "coreRationale": "原始需求：已有任务发送被接收时原文不再留在输入框；本机及 SSH 两个必要变体。门槛按行为判断，不以补丁大小或是否写代码判断。",
+  "completionRule": "All items passed is supplemental, never a zero-score gate",
+  "groups": [
+    {
+      "id": "immediate-clear",
+      "name": "立即清空",
+      "items": [
+        "C01"
+      ],
+      "weight": 1,
+      "rationale": "接收与浏览器更新边界；本机及SSH是同项变体"
+    },
+    {
+      "id": "failure-recovery",
+      "name": "失败恢复",
+      "items": [
+        "C04",
+        "C05"
+      ],
+      "weight": 1,
+      "rationale": "返回false及抛错两种恢复结果；C05主要归入异常恢复"
+    },
+    {
+      "id": "next-draft",
+      "name": "下一稿保护",
+      "items": [
+        "C03",
+        "C06",
+        "C10"
+      ],
+      "weight": 1,
+      "rationale": "后续草稿的保留、提交处理与引用解析隔离"
+    },
+    {
+      "id": "task-isolation",
+      "name": "任务隔离",
+      "items": [
+        "C07",
+        "C08",
+        "C09"
+      ],
+      "weight": 1,
+      "rationale": "离开、返回及其他任务结算三个边界"
+    },
+    {
+      "id": "home-handoff",
+      "name": "首页交接",
+      "items": [
+        "C11",
+        "C12",
+        "C13"
+      ],
+      "weight": 1,
+      "rationale": "创建中、创建成功、创建失败；多行是C11变体"
+    },
+    {
+      "id": "focus",
+      "name": "焦点体验",
+      "items": [
+        "C17"
+      ],
+      "weight": 1,
+      "rationale": "鼠标发送后无需重新聚焦即可续写"
+    }
+  ],
+  "productContract": {
+    "existingTask": "消息受理后允许继续编辑下一稿；再次发送允许明确禁用、可见反馈、实际受理或可靠排队。",
+    "home": "首页创建单独生命周期，可保持原稿或安全清空并保护输入。",
+    "C06": "独立检查发送处理；整框锁定仍真实点击发送并结算重试，不在editable前置断言退出；续写能力由C03/C05/C17诊断。",
+    "C09": "比较A结算前后B状态，及A保持在途/A成功/A失败三个隔离进程反事实；不要求固定editable=true。",
+    "C04": "使用真实schema支持的段落、hardBreak、bulletList、listItem、composerQuote，并确认fixture结构确已挂载。"
+  }
+}

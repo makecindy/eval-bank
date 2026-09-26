@@ -1,0 +1,2 @@
+const fs=require('node:fs'),path=require('node:path');
+(async()=>{const host=await require('./host.cjs').create(process.argv[3]||path.resolve(__dirname,'../tests/module.cjs'));const actions=JSON.parse(fs.readFileSync(process.argv[2]||path.join(__dirname,'scene.json'),'utf8'));for(const action of actions)console.log(JSON.stringify({action,result:await host.run(action)}));await host.close();process.exit(0)})().catch(e=>{console.error(e);process.exit(1)});

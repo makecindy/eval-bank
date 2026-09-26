@@ -1,0 +1,12 @@
+import fs from 'node:fs';import path from 'node:path';import {execFileSync} from 'node:child_process';import {fileURLToPath} from 'node:url';import {build} from './build.mjs';
+const root=path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+if(fs.realpathSync(process.cwd())!==fs.realpathSync(root))throw Error('Run from your assigned candidate root; actual cwd='+process.cwd());
+fs.mkdirSync('.work',{recursive:true});
+const probe='.work/probe.mjs';fs.writeFileSync(probe,'console.log("probe-before-edit")\n');
+const before=fs.readFileSync(probe,'utf8');fs.writeFileSync(probe,before.replace('before-edit','after-edit'));
+const after=fs.readFileSync(probe,'utf8');const stdout=execFileSync(process.execPath,[probe],{encoding:'utf8'}).trim();
+if(!after.includes('after-edit')||stdout!=='probe-after-edit')throw Error('Edit/execute/readback failed');
+const output=await build();const module=await import(output);
+if(typeof module.HistoryViewController!=='function'||typeof module.buildMobileHistoryRenderItems!=='function')throw Error('Source module not loaded');
+const result={cwd:process.cwd(),node:process.version,platform:process.platform,arch:process.arch,readBefore:before,readAfter:after,executed:stdout,built:output,loaded:true};
+fs.writeFileSync('.work/preflight.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));

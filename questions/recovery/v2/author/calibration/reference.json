@@ -1,0 +1,29 @@
+{
+  "status": "graded",
+  "score": 1.0,
+  "scoreExact": "1",
+  "items": {
+    "R01": true,
+    "R02": true,
+    "R03": true,
+    "R04": true,
+    "R06": true,
+    "R07": true,
+    "R08": true,
+    "R09": true,
+    "R10": true,
+    "R11": true,
+    "R12": true,
+    "R13": true,
+    "R14": true,
+    "R15": true,
+    "R16": true,
+    "R17": true,
+    "R18": true,
+    "R19": true,
+    "R20": true
+  },
+  "questionId": "recovery",
+  "revision": "v2",
+  "scoringVersion": "quality-composition-v1"
+}

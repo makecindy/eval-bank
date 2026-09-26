@@ -1,0 +1,23 @@
+{
+  "status": "graded",
+  "score": 0.3888888888888889,
+  "scoreExact": "7/18",
+  "items": {
+    "C01": false,
+    "C03": false,
+    "C04": true,
+    "C05": true,
+    "C06": false,
+    "C07": true,
+    "C08": false,
+    "C09": false,
+    "C10": false,
+    "C11": true,
+    "C12": true,
+    "C13": true,
+    "C17": false
+  },
+  "questionId": "composer",
+  "revision": "v2",
+  "scoringVersion": "quality-composition-v1"
+}

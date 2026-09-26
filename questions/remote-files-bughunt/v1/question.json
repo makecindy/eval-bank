@@ -1,0 +1,65 @@
+{
+  "id": "remote-files-bughunt",
+  "revision": "v1",
+  "title": "远程文件自主查错",
+  "scoringVersion": "frozen-coverage-v1",
+  "environment": "见原题包环境说明；旧题为历史归一评分适配器，完整可运行新版须重新登记候选和校准。",
+  "changeNote": "现有冻结题原样接入",
+  "groups": [
+    {
+      "id": "B01",
+      "weight": "1/6",
+      "mode": "all",
+      "items": [
+        "B01"
+      ]
+    },
+    {
+      "id": "B02",
+      "weight": "1/6",
+      "mode": "all",
+      "items": [
+        "B02"
+      ]
+    },
+    {
+      "id": "B03",
+      "weight": "1/6",
+      "mode": "all",
+      "items": [
+        "B03",
+        "B03b"
+      ]
+    },
+    {
+      "id": "B04",
+      "weight": "1/6",
+      "mode": "all",
+      "items": [
+        "B04"
+      ]
+    },
+    {
+      "id": "B05",
+      "weight": "1/6",
+      "mode": "all",
+      "items": [
+        "B05"
+      ]
+    },
+    {
+      "id": "B06",
+      "weight": "1/6",
+      "mode": "all",
+      "items": [
+        "B06"
+      ]
+    }
+  ],
+  "importOnly": false,
+  "graderCommand": [
+    "python3",
+    "author/grade.py",
+    "{submission}"
+  ]
+}

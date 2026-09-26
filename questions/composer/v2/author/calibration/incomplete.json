@@ -1,0 +1,20 @@
+{
+  "status": "graded",
+  "score": 1.0,
+  "scoreExact": "1",
+  "items": {
+    "C01": true,
+    "C03": true,
+    "C04": true,
+    "C05": true,
+    "C06": true,
+    "C07": true,
+    "C08": true,
+    "C09": true,
+    "C10": true,
+    "C11": true,
+    "C12": true,
+    "C13": true,
+    "C17": true
+  }
+}

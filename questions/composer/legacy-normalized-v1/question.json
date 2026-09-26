@@ -1,0 +1,67 @@
+{
+  "id": "composer",
+  "revision": "legacy-normalized-v1",
+  "title": "输入框发送",
+  "scoringVersion": "equal-capability-groups-v1.5",
+  "environment": "见原题包环境说明；旧题为历史归一评分适配器，完整可运行新版须重新登记候选和校准。",
+  "changeNote": "历史统一口径迁入；不宣称历史作答用同一物理题包。",
+  "groups": [
+    {
+      "id": "immediate-clear",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C01"
+      ]
+    },
+    {
+      "id": "failure-recovery",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C04",
+        "C05"
+      ]
+    },
+    {
+      "id": "next-draft",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C03",
+        "C06",
+        "C10"
+      ]
+    },
+    {
+      "id": "task-isolation",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C07",
+        "C08",
+        "C09"
+      ]
+    },
+    {
+      "id": "home-handoff",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C11",
+        "C12",
+        "C13"
+      ]
+    },
+    {
+      "id": "focus",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C17"
+      ]
+    }
+  ],
+  "importOnly": true,
+  "graderCommand": []
+}

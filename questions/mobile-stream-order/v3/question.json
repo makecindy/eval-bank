@@ -1,0 +1,52 @@
+{
+  "id": "mobile-stream-order",
+  "revision": "v3",
+  "title": "手机历史与流式消息交接：质量与组合场景升级",
+  "scoringVersion": "quality-composition-v1",
+  "groups": [
+    {
+      "id": "C01",
+      "weight": "1/4",
+      "mode": "all",
+      "items": [
+        "C01"
+      ]
+    },
+    {
+      "id": "C02",
+      "weight": "1/4",
+      "mode": "all",
+      "items": [
+        "C02"
+      ]
+    },
+    {
+      "id": "C03",
+      "weight": "1/4",
+      "mode": "all",
+      "items": [
+        "C03"
+      ]
+    },
+    {
+      "id": "C04",
+      "weight": "1/4",
+      "mode": "all",
+      "items": [
+        "C04"
+      ]
+    }
+  ],
+  "changeNote": "Restore complete executable assets; retain prior capabilities and add event-composition checks; publish product choices before testing.",
+  "environment": "macOS arm64 bundled Node/esbuild; shared history and actual mobile render model, no React Native view",
+  "graderCommand": [
+    "python3",
+    "-B",
+    "author/grade.py",
+    "{candidateRoot}",
+    "{outputJson}"
+  ],
+  "legacyAdapter": "data/current-results.json contributions plus source grade-result where absent",
+  "supersedes": "legacy-normalized-v1",
+  "status": "frozen"
+}

@@ -1,0 +1,222 @@
+{
+  "id": "task-switch-cache",
+  "revision": "v2",
+  "title": "任务切换与多层缓存自主查错",
+  "supersedes": "v1",
+  "scoringVersion": "gated-core-edge-guard-v2",
+  "environment": "macOS arm64 bundled Node; historical production pure business closure, no React/Electron/network",
+  "changeNote": "保留v1基础修复，换成七处跨纯业务模块的新植入；减少定位提示；每组核心50%+相邻边界25%+正常保护25%，核心门控。没有虚构异步链路。",
+  "groups": [
+    {
+      "id": "V01-base",
+      "name": "内部文件投影依赖 base",
+      "weight": "1/14",
+      "mode": "all",
+      "items": [
+        "V01core"
+      ]
+    },
+    {
+      "id": "V01-edge",
+      "name": "内部文件投影依赖 edge",
+      "weight": "1/28",
+      "mode": "all",
+      "items": [
+        "V01core",
+        "V01edge"
+      ]
+    },
+    {
+      "id": "V01-guard",
+      "name": "内部文件投影依赖 guard",
+      "weight": "1/28",
+      "mode": "all",
+      "items": [
+        "V01core",
+        "V01guard"
+      ]
+    },
+    {
+      "id": "V02-base",
+      "name": "消息修订与Markdown缓存 base",
+      "weight": "1/14",
+      "mode": "all",
+      "items": [
+        "V02core"
+      ]
+    },
+    {
+      "id": "V02-edge",
+      "name": "消息修订与Markdown缓存 edge",
+      "weight": "1/28",
+      "mode": "all",
+      "items": [
+        "V02core",
+        "V02edge"
+      ]
+    },
+    {
+      "id": "V02-guard",
+      "name": "消息修订与Markdown缓存 guard",
+      "weight": "1/28",
+      "mode": "all",
+      "items": [
+        "V02core",
+        "V02guard"
+      ]
+    },
+    {
+      "id": "V03-base",
+      "name": "流式媒体交接 base",
+      "weight": "1/14",
+      "mode": "all",
+      "items": [
+        "V03core"
+      ]
+    },
+    {
+      "id": "V03-edge",
+      "name": "流式媒体交接 edge",
+      "weight": "1/28",
+      "mode": "all",
+      "items": [
+        "V03core",
+        "V03edge"
+      ]
+    },
+    {
+      "id": "V03-guard",
+      "name": "流式媒体交接 guard",
+      "weight": "1/28",
+      "mode": "all",
+      "items": [
+        "V03core",
+        "V03guard"
+      ]
+    },
+    {
+      "id": "V04-base",
+      "name": "动态卡片归属 base",
+      "weight": "1/14",
+      "mode": "all",
+      "items": [
+        "V04core"
+      ]
+    },
+    {
+      "id": "V04-edge",
+      "name": "动态卡片归属 edge",
+      "weight": "1/28",
+      "mode": "all",
+      "items": [
+        "V04core",
+        "V04edge"
+      ]
+    },
+    {
+      "id": "V04-guard",
+      "name": "动态卡片归属 guard",
+      "weight": "1/28",
+      "mode": "all",
+      "items": [
+        "V04core",
+        "V04guard"
+      ]
+    },
+    {
+      "id": "V05-base",
+      "name": "属主对象换代 base",
+      "weight": "1/14",
+      "mode": "all",
+      "items": [
+        "V05core"
+      ]
+    },
+    {
+      "id": "V05-edge",
+      "name": "属主对象换代 edge",
+      "weight": "1/28",
+      "mode": "all",
+      "items": [
+        "V05core",
+        "V05edge"
+      ]
+    },
+    {
+      "id": "V05-guard",
+      "name": "属主对象换代 guard",
+      "weight": "1/28",
+      "mode": "all",
+      "items": [
+        "V05core",
+        "V05guard"
+      ]
+    },
+    {
+      "id": "V06-base",
+      "name": "热访问预算记账 base",
+      "weight": "1/14",
+      "mode": "all",
+      "items": [
+        "V06core"
+      ]
+    },
+    {
+      "id": "V06-edge",
+      "name": "热访问预算记账 edge",
+      "weight": "1/28",
+      "mode": "all",
+      "items": [
+        "V06core",
+        "V06edge"
+      ]
+    },
+    {
+      "id": "V06-guard",
+      "name": "热访问预算记账 guard",
+      "weight": "1/28",
+      "mode": "all",
+      "items": [
+        "V06core",
+        "V06guard"
+      ]
+    },
+    {
+      "id": "V07-base",
+      "name": "Unicode驻留预算 base",
+      "weight": "1/14",
+      "mode": "all",
+      "items": [
+        "V07core"
+      ]
+    },
+    {
+      "id": "V07-edge",
+      "name": "Unicode驻留预算 edge",
+      "weight": "1/28",
+      "mode": "all",
+      "items": [
+        "V07core",
+        "V07edge"
+      ]
+    },
+    {
+      "id": "V07-guard",
+      "name": "Unicode驻留预算 guard",
+      "weight": "1/28",
+      "mode": "all",
+      "items": [
+        "V07core",
+        "V07guard"
+      ]
+    }
+  ],
+  "status": "calibrated",
+  "graderCommand": [
+    "python3",
+    "-B",
+    "author/grade.py",
+    "{candidateRoot}",
+    "{outputJson}"
+  ]
+}

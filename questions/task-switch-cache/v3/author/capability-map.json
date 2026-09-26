@@ -1,0 +1,73 @@
+{
+  "parsing": {
+    "negative": [
+      "D01a",
+      "D01b"
+    ],
+    "markdown": [
+      "V02core",
+      "V02edge",
+      "V02guard"
+    ]
+  },
+  "media": {
+    "array-isolation": [
+      "D02a",
+      "D02b"
+    ],
+    "handoff": [
+      "V03core",
+      "V03edge",
+      "V03guard"
+    ]
+  },
+  "projection": {
+    "context": [
+      "D03a",
+      "D03b"
+    ],
+    "internal-change": [
+      "V01core",
+      "V01edge",
+      "V01guard"
+    ]
+  },
+  "cards": {
+    "snapshot": [
+      "D04a",
+      "D04b"
+    ],
+    "ownership": [
+      "V04core",
+      "V04edge",
+      "V04guard"
+    ]
+  },
+  "owner": {
+    "generation": [
+      "D05a",
+      "D05b",
+      "V05core",
+      "V05edge",
+      "V05guard"
+    ]
+  },
+  "bounded-reuse": {
+    "lru": [
+      "D06a",
+      "D06b"
+    ],
+    "quotas": [
+      "D07a",
+      "D07b",
+      "V07core",
+      "V07edge",
+      "V07guard"
+    ],
+    "accounting": [
+      "V06core",
+      "V06edge",
+      "V06guard"
+    ]
+  }
+}

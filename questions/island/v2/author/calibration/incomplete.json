@@ -1,0 +1,21 @@
+{
+  "status": "graded",
+  "score": 0.8181818181818182,
+  "scoreExact": "9/11",
+  "items": {
+    "I01": true,
+    "I02": true,
+    "I03": true,
+    "I04": true,
+    "I05": true,
+    "I06": false,
+    "I07": true,
+    "I08": true,
+    "I09": true,
+    "I10": true,
+    "I11": false
+  },
+  "questionId": "island",
+  "revision": "v2",
+  "scoringVersion": "quality-composition-v1"
+}

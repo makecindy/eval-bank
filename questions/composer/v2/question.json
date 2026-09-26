@@ -1,0 +1,75 @@
+{
+  "id": "composer",
+  "revision": "v2",
+  "title": "输入框发送与草稿生命周期：质量与组合场景升级",
+  "scoringVersion": "quality-composition-v1",
+  "groups": [
+    {
+      "id": "immediate-clear",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C01"
+      ]
+    },
+    {
+      "id": "failure-recovery",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C04",
+        "C05"
+      ]
+    },
+    {
+      "id": "next-draft",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C03",
+        "C06",
+        "C10"
+      ]
+    },
+    {
+      "id": "task-isolation",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C07",
+        "C08",
+        "C09"
+      ]
+    },
+    {
+      "id": "home-handoff",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C11",
+        "C12",
+        "C13"
+      ]
+    },
+    {
+      "id": "focus",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C17"
+      ]
+    }
+  ],
+  "changeNote": "Restore complete executable assets; retain prior capabilities and add event-composition checks; publish product choices before testing.",
+  "environment": "macOS arm64 bundled Node/React/Tiptap/Chromium; real component and keyboard, fake host acceptance",
+  "graderCommand": [
+    "python3",
+    "-B",
+    "author/grade.py",
+    "{candidateRoot}",
+    "{outputJson}"
+  ],
+  "legacyAdapter": "data/current-results.json contributions plus source grade-result where absent",
+  "supersedes": "legacy-normalized-v1",
+  "status": "frozen"
+}
