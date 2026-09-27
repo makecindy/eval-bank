@@ -262,8 +262,45 @@ sys.exit(2 if mode=='nonzero' else 1 if mode in ('assertion','environment','fals
         shutil.copytree(target / "candidate", candidate)
         source = candidate / paths[0]
         source.write_text(source.read_text().replace("function buildRenderItems(", "function renamedProjection("))
+        (target / "reference/runtime").mkdir()
+        (target / "reference/runtime/node").symlink_to(shutil.which("node"))
         with self.assertRaisesRegex(AssertionError, "OBSERVABILITY"):
             grader.grade(candidate)
+
+    def test_cache_syntax_precedes_instrumentation_without_executing_candidate(self):
+        adapters = load("cache_syntax_adapters", REV / "adapters.py")
+        target = self.q / "cache-syntax"
+        shutil.copytree(REPO / "questions/task-switch-cache/v3", target)
+        adapters.apply(target, "task-switch-cache")
+        (target / "reference/runtime").mkdir(parents=True)
+        (target / "reference/runtime/node").symlink_to(shutil.which("node"))
+        shutil.copy2(target / "candidate/package.json", target / "reference/package.json")
+        grader = load("cache_syntax_grader", target / "author/grade_impl.py")
+        paths = [grader.CHAT + "MessageStream.js", "src/apps/desktop/src/renderer/lib/generatedFiles.js", grader.CHAT + "markdownImageTargets.js"]
+        for index, rel in enumerate(paths):
+            candidate = self.q / ("syntax-" + str(index))
+            shutil.copytree(target / "candidate", candidate)
+            (candidate / rel).write_text("const = ;")
+            result = grader.grade(candidate)
+            self.assertEqual(result["status"], "graded")
+            self.assertEqual(result["score"], 0)
+            self.assertTrue(all(v is False for v in result["items"].values()))
+        candidate = self.q / "masked-syntax"
+        shutil.copytree(target / "candidate", candidate)
+        (candidate / paths[0]).write_text("export const replacement = () => {}; ")
+        (candidate / paths[2]).write_text("const = ;")
+        self.assertEqual(grader.grade(candidate)["score"], 0)
+        candidate = target / "candidate"
+        marker = self.q / "must-not-run"
+        (candidate / paths[0]).write_text("import fs from 'node:fs'; fs.writeFileSync(" + json.dumps(str(marker)) + ", 'bad'); export const ok = 1;")
+        self.assertFalse(grader.invalid_candidate_syntax(candidate))
+        self.assertFalse(marker.exists())
+        with patch.object(grader.subprocess, "run", side_effect=subprocess.TimeoutExpired("parser", 1)):
+            with self.assertRaises(subprocess.TimeoutExpired):grader.invalid_candidate_syntax(candidate)
+        with patch.object(Path, "read_text", side_effect=PermissionError("denied")):
+            with self.assertRaises(PermissionError):grader.invalid_candidate_syntax(candidate)
+        (target / "reference/runtime/node").unlink()
+        with self.assertRaises(FileNotFoundError):grader.invalid_candidate_syntax(candidate)
 
     def test_changed_or_missing_runtime_rejected_before_execution(self):
         runtime = self.q / "node"
@@ -325,6 +362,8 @@ sys.exit(2 if mode=='nonzero' else 1 if mode in ('assertion','environment','fals
             # A FIFO with no writer must never be opened by the source reader.
             self.assertIsNone(read(self.q, name))
             source_path.unlink()
+            source_path.write_bytes(b'\xff\xfe')
+            self.assertIsNone(read(self.q, name))
             source_path.write_text("candidate")
             self.assertEqual(read(self.q, name), "candidate")
             with patch.object(Path, "read_text", side_effect=PermissionError("denied")):
@@ -340,6 +379,10 @@ sys.exit(2 if mode=='nonzero' else 1 if mode in ('assertion','environment','fals
             read(self.q, "audioContextPool.ts")
         (self.q / "audioContextPool.ts").mkdir()
         with self.assertRaises(IsADirectoryError):
+            read(self.q, "audioContextPool.ts")
+        (self.q / "audioContextPool.ts").rmdir()
+        (self.q / "audioContextPool.ts").write_bytes(b'\xff')
+        with self.assertRaises(UnicodeDecodeError):
             read(self.q, "audioContextPool.ts")
         sources = {"pcm16k-worklet.js": "registerProcessor('pcm16k-worklet',class extends AudioWorkletProcessor {});",
                    "WebMicAudioEngine.ts": "export class WebMicAudioEngine { onPcm16k() {} }",

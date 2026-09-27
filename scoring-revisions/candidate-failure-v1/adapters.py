@@ -189,9 +189,23 @@ def grade(root):""")
   except (FileNotFoundError,NotADirectoryError):missing.append(rel)
  return missing
 
+def invalid_candidate_syntax(root):
+ sources=[]
+ for rel in (CHAT+'MessageStream.js','src/apps/desktop/src/renderer/lib/generatedFiles.js',CHAT+'markdownImageTargets.js'):
+  try:sources.append((root/rel).read_text(encoding='utf-8'))
+  except UnicodeDecodeError:return True
+ # Parse as ESM without linking or evaluating candidate code. Only the trusted
+ # parser's SyntaxError is a candidate failure; process/IO/timeouts propagate.
+ script="const fs=require('node:fs'),vm=require('node:vm');const sources=JSON.parse(fs.readFileSync(0,'utf8'));const valid=sources.map(s=>{try{new vm.SourceTextModule(s);return true}catch(e){if(e instanceof SyntaxError)return false;throw e}});process.stdout.write(JSON.stringify(valid));"
+ p=subprocess.run([str(HERE.parent/'reference/runtime/node'),'--experimental-vm-modules','--input-type=commonjs','-e',script],input=json.dumps(sources),capture_output=True,text=True,timeout=45)
+ if p.returncode:raise RuntimeError('Candidate syntax parser unavailable')
+ valid=json.loads(p.stdout)
+ if not isinstance(valid,list) or len(valid)!=len(sources) or any(type(v) is not bool for v in valid):raise ValueError('Invalid syntax parser result')
+ return not all(valid)
+
 def grade(root,selected=None):""")
             replace(root, "author/grade_impl.py", "root=pathlib.Path(root).resolve(); outputs=[]",
-                    "root=pathlib.Path(root).resolve(); outputs=[]; missing=missing_candidate_sources(root)")
+                    "root=pathlib.Path(root).resolve(); outputs=[]; missing=missing_candidate_sources(root) or invalid_candidate_syntax(root)")
             replace(root, "author/grade_impl.py", "dst=pathlib.Path(td);shutil.copytree(root/'src',dst/'src')",
                     "dst=pathlib.Path(td)\n  if not missing:shutil.copytree(root/'src',dst/'src')")
             replace(root, "author/grade_impl.py", "   f=dst/rel;s=f.read_text();",
@@ -228,7 +242,7 @@ async function candidateImport(value) {
  try:
   if not stat.S_ISREG(path.lstat().st_mode):return None
   return path.read_text()
- except (FileNotFoundError,NotADirectoryError,IsADirectoryError):return None
+ except (FileNotFoundError,NotADirectoryError,IsADirectoryError,UnicodeDecodeError):return None
 
 import runner,verify,behavior""")
         replace(root, "author/grade_impl.py", "(source/f).read_text()", "read_candidate_source(source,f)")
