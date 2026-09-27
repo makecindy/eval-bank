@@ -194,7 +194,7 @@ sys.exit(2 if mode=='nonzero' else 1 if mode in ('assertion','environment','fals
 
             (Path(self.tmp.name) / "new-result.json").unlink()
 
-    def test_audio_missing_editable_sources_fail_only_their_execution_path(self):
+    def test_audio_unloadable_editable_sources_fail_only_their_execution_path(self):
         import ast
         adapters = load("audio_adapters", REV / "adapters.py")
         target = self.q / "audio"
@@ -207,10 +207,30 @@ sys.exit(2 if mode=='nonzero' else 1 if mode in ('assertion','environment','fals
         read = scope["read_candidate_source"]
         for name in ("WebMicAudioEngine.ts", "pcm16k-worklet.js"):
             self.assertIsNone(read(self.q, name))
+            source_path = self.q / name
+            source_path.mkdir()
+            self.assertIsNone(read(self.q, name))
+            source_path.rmdir()
+            import os
+            os.mkfifo(source_path)
+            # A FIFO with no writer must never be opened by the source reader.
+            self.assertIsNone(read(self.q, name))
+            source_path.unlink()
+            source_path.write_text("candidate")
+            self.assertEqual(read(self.q, name), "candidate")
             with patch.object(Path, "read_text", side_effect=PermissionError("denied")):
                 with self.assertRaises(PermissionError):
                     read(self.q, name)
+            with patch.object(Path, "lstat", side_effect=PermissionError("denied")):
+                with self.assertRaises(PermissionError):
+                    read(self.q, name)
+            with patch.object(Path, "read_text", side_effect=OSError("storage failure")):
+                with self.assertRaises(OSError):
+                    read(self.q, name)
         with self.assertRaises(FileNotFoundError):
+            read(self.q, "audioContextPool.ts")
+        (self.q / "audioContextPool.ts").mkdir()
+        with self.assertRaises(IsADirectoryError):
             read(self.q, "audioContextPool.ts")
         sources = {"pcm16k-worklet.js": "registerProcessor('pcm16k-worklet',class extends AudioWorkletProcessor {});",
                    "WebMicAudioEngine.ts": "export class WebMicAudioEngine { onPcm16k() {} }",

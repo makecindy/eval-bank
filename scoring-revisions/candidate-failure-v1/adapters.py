@@ -187,13 +187,16 @@ async function candidateImport(value) {
                     raise ValueError("Missing candidate import boundary")
                 path.write_text(text.replace("await import(url(", "await candidateImport(url("), encoding="utf-8")
     elif ident == "audio":
-        # Only absent editable files are candidate load failures. Protected
-        # inputs, permissions and other filesystem errors remain author/IO errors.
+        # Editable source shape is candidate-owned; permissions and storage
+        # errors are not. Never try to read FIFOs/devices as source text.
         replace(root, "author/grade_impl.py", "import runner,verify,behavior", """def read_candidate_source(source,name):
- try:return (source/name).read_text()
- except FileNotFoundError:
-  if name not in ('WebMicAudioEngine.ts','pcm16k-worklet.js'):raise
-  return None
+ import stat
+ path=source/name
+ if name not in ('WebMicAudioEngine.ts','pcm16k-worklet.js'):return path.read_text()
+ try:
+  if not stat.S_ISREG(path.lstat().st_mode):return None
+  return path.read_text()
+ except (FileNotFoundError,NotADirectoryError,IsADirectoryError):return None
 
 import runner,verify,behavior""")
         replace(root, "author/grade_impl.py", "(source/f).read_text()", "read_candidate_source(source,f)")
