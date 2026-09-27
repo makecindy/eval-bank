@@ -3,7 +3,7 @@
   "status": "experimental",
   "rule": "equal-question-mean-v1",
   "scoringRevision": "candidate-failure-v1",
-  "scoringManifestSha256": "8540fb8c4a4bfe50f4096c13174fc3868b4be03a1e2ac0e4ed012f669514bb6f",
+  "scoringManifestSha256": "bd6bcc94d35c6feb3528946a4e5bdabfb0bb33f83ef691404e47080148aa76ef",
   "distribution": "explicit-local-restoration-only",
   "questions": [
     {

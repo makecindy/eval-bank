@@ -168,6 +168,65 @@ sys.exit(2 if mode=='nonzero' else 1 if mode in ('assertion','environment','fals
         with self.assertRaises(FileNotFoundError):
             self.grade.verify_closure(expected)
 
+    def test_both_checker_watchdogs_leave_real_child_timeout_unscored(self):
+        import ast
+        adapters = load("timeout_adapters", REV / "adapters.py")
+        for ident, version in (("remote-files-bughunt", "v4"), ("task-switch-cache", "v3")):
+            target = self.q / ident
+            shutil.copytree(REPO / "questions" / ident / version, target)
+            adapters.apply(target, ident)
+            tree = ast.parse((target / "author/grade_impl.py").read_text())
+            handler = next(n for n in ast.walk(tree) if isinstance(n, ast.ExceptHandler)
+                           and isinstance(n.type, ast.Attribute) and n.type.attr == "TimeoutExpired")
+            # Execute the production catch around a real hung child, with a
+            # shorter test deadline rather than waiting 15/45 seconds per case.
+            call = ast.parse("subprocess.run([sys.executable,'-c','import time;time.sleep(30)'],timeout=.05)").body
+            block = ast.Try(body=call, handlers=[handler], orelse=[], finalbody=[])
+            scope = dict(subprocess=subprocess, sys=sys, ident="case", case="case")
+            exec(compile(ast.fix_missing_locations(ast.Module(body=[block], type_ignores=[])), "timeout", "exec"), scope)
+            row = scope["row" if ident == "remote-files-bughunt" else "o"]
+            self.assertIs(row["environment_invalid"], True)
+            self.assertEqual(row["failureCategory"], "unclassified_timeout")
+            result = self.invoke([{"status": "graded", "score": 1},
+                                  {"status": "environment_invalid", "score": None, "details": [row]},
+                                  {"status": "graded", "score": 1}])
+            self.assertIsNone(result["score"])
+
+            (Path(self.tmp.name) / "new-result.json").unlink()
+
+    def test_audio_missing_editable_sources_fail_only_their_execution_path(self):
+        import ast
+        adapters = load("audio_adapters", REV / "adapters.py")
+        target = self.q / "audio"
+        shutil.copytree(REPO / "questions/audio/v2", target)
+        adapters.apply(target, "audio")
+        tree = ast.parse((target / "author/grade_impl.py").read_text())
+        reader = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "read_candidate_source")
+        scope = {}
+        exec(compile(ast.fix_missing_locations(ast.Module(body=[reader], type_ignores=[])), "reader", "exec"), scope)
+        read = scope["read_candidate_source"]
+        for name in ("WebMicAudioEngine.ts", "pcm16k-worklet.js"):
+            self.assertIsNone(read(self.q, name))
+            with patch.object(Path, "read_text", side_effect=PermissionError("denied")):
+                with self.assertRaises(PermissionError):
+                    read(self.q, name)
+        with self.assertRaises(FileNotFoundError):
+            read(self.q, "audioContextPool.ts")
+        sources = {"pcm16k-worklet.js": "registerProcessor('pcm16k-worklet',class extends AudioWorkletProcessor {});",
+                   "WebMicAudioEngine.ts": "export class WebMicAudioEngine { onPcm16k() {} }",
+                   "audioContextPool.ts": ""}
+        requests = {"tests": [{"path": path, "rate": 16000, "operations": []} for path in ("worklet", "fallback")]}
+        for missing, expected in ((None, [[], []]), ("pcm16k-worklet.js", [{"candidateFailure": True}, []]),
+                                  ("WebMicAudioEngine.ts", [[], {"candidateFailure": True}])):
+            payload = dict(sources)
+            if missing:
+                payload[missing] = None
+            source = self.q / "audio-input.json"
+            source.write_text(json.dumps(payload))
+            child = subprocess.run(["node", "--experimental-vm-modules", str(target / "author/adapter.mjs"), "audio", str(source)],
+                                   input=json.dumps(requests), text=True, capture_output=True, timeout=10, check=True)
+            self.assertEqual(json.loads(child.stdout), expected)
+
     def test_malformed_or_incomplete_result_is_unscored(self):
         output = Path(self.tmp.name) / "raw.json"
         for result in ([1], {"status": "graded", "score": float("nan"), "items": {"A": True}},

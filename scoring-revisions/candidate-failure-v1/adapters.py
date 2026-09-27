@@ -27,6 +27,11 @@ def apply(root, ident):
      {row}=json.loads({proc}.stdout)
      if not isinstance({row},dict) or {row}.get('id')!={case} or type({row}.get('pass')) is not bool:raise ValueError('Invalid checker evidence')
      if {proc}.returncode not in (0,1) or ({proc}.returncode==1 and {row}['pass'] is not False):raise ValueError('Checker exit contradicts evidence')""")
+        # An outer watchdog cannot distinguish candidate hangs from checker or
+        # infrastructure hangs. Keep this separate from reviewed inner deadlines.
+        replace(root, "author/grade_impl.py",
+                f"except subprocess.TimeoutExpired:{row}={{'id':{case},'pass':False,",
+                f"except subprocess.TimeoutExpired:{row}={{'id':{case},'pass':False,'environment_invalid':True,'failureCategory':'unclassified_timeout',")
     if ident == "mobile-stream-order":
         replace(root, "author/run.mjs",
                 "const [source,bundle,out]=process.argv.slice(2);await build(source,bundle);\nconst api=await import(pathToFileURL(bundle));fs.writeFileSync(out,JSON.stringify(await assess(api)));",
@@ -182,9 +187,21 @@ async function candidateImport(value) {
                     raise ValueError("Missing candidate import boundary")
                 path.write_text(text.replace("await import(url(", "await candidateImport(url("), encoding="utf-8")
     elif ident == "audio":
+        # Only absent editable files are candidate load failures. Protected
+        # inputs, permissions and other filesystem errors remain author/IO errors.
+        replace(root, "author/grade_impl.py", "import runner,verify,behavior", """def read_candidate_source(source,name):
+ try:return (source/name).read_text()
+ except FileNotFoundError:
+  if name not in ('WebMicAudioEngine.ts','pcm16k-worklet.js'):raise
+  return None
+
+import runner,verify,behavior""")
+        replace(root, "author/grade_impl.py", "(source/f).read_text()", "read_candidate_source(source,f)")
         # VM exceptions are attached to individual requests. The author oracle
         # remains outside this catch; adapter/setup/process errors stay unscored.
         replace(root, "author/adapter.mjs", "  let instance;", "  let instance;\n  try {")
+        replace(root, "author/adapter.mjs", "  if(test.path==='worklet'){",
+                "  if(typeof sources[test.path==='worklet'?'pcm16k-worklet.js':'WebMicAudioEngine.ts']!=='string')throw Error('Candidate source missing');\n  if(test.path==='worklet'){")
         replace(root, "author/adapter.mjs", "  results.push(messages.map",
                 "  } catch(e) {results.push({candidateFailure:true});continue;}\n  results.push(messages.map")
         replace(root, "author/behavior.py", " checks={k:[] for k,_ in ITEMS}",
