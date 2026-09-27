@@ -156,6 +156,36 @@ sys.exit(2 if mode=='nonzero' else 1 if mode in ('assertion','environment','fals
                 self.assertIs(row["pass"], mode == "success")
                 self.assertEqual(bool(row.get("environment_invalid")), mode not in ("healthy", "assertion", "success"))
 
+    def test_remote_missing_or_non_directory_source_tree_is_candidate_failure(self):
+        import os
+        adapters = load("remote_shape_adapters", REV / "adapters.py")
+        target = self.q / "remote"
+        shutil.copytree(REPO / "questions/remote-files-bughunt/v4", target)
+        adapters.apply(target, "remote-files-bughunt")
+        (target / "reference/runtime").mkdir(parents=True)
+        (target / "reference/package.json").write_text('{}')
+        grader = load("remote_shape_grader", target / "author/grade_impl.py")
+        for shape in ("missing", "file", "fifo"):
+            with self.subTest(shape=shape):
+                candidate = self.q / shape
+                candidate.mkdir()
+                if shape == "file":(candidate / "src").write_text('not a source tree')
+                if shape == "fifo":os.mkfifo(candidate / "src")
+                with patch.object(grader.subprocess, "run", side_effect=AssertionError("must not execute candidate")):
+                    result = grader.grade(candidate)
+                self.assertEqual(result["status"], "graded")
+                self.assertEqual(result["score"], 0)
+                self.assertEqual(len(result["details"]), len(grader.NEW + grader.OLD))
+                self.assertTrue(all(value is False for value in result["items"].values()))
+                self.assertTrue(all(row["failureCategory"] == "candidate_load" for row in result["details"]))
+        for error in (PermissionError("denied"), OSError("storage unavailable")):
+            with patch.object(Path, "lstat", side_effect=error), self.assertRaises(type(error)):
+                grader.missing_candidate_tree(self.q)
+        # Author runtime failures remain environment exceptions even with a missing candidate tree.
+        shutil.rmtree(target / "reference/runtime")
+        with self.assertRaises(FileNotFoundError):
+            grader.grade(self.q / "missing")
+
     def test_cache_instrumentation_inputs_missing_or_nonregular_are_candidate_failures(self):
         import os
         adapters = load("cache_shape_adapters", REV / "adapters.py")

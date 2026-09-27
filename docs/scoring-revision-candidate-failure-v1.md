@@ -89,3 +89,5 @@ python3 -B scripts/test-scoring-revision.py
 
 
 缓存题三个插桩入口（MessageStream、generatedFiles、markdownImageTargets）在复制/读取前检查普通文件类型；缺失、目录、FIFO等不可加载输入走候选失败，不进入插桩读取或Node执行。冻结场景都先加载共同入口及这些依赖，因此此类缺失使相关场景失败，沿原能力映射结算；仍须参考前后健康才生成有效分数。权限/存储异常继续无分，等价重构无法插桩仍属观测异常、需人工适配。该静态检查不是并发文件系统隔离。
+
+远程文件题在复制前检查候选 `src` 是实际目录；缺失、普通文件或 FIFO 替代时，不复制候选树、不启动 Node，将冻结场景记录为 `candidate_load` 失败，再由既有参考前后健康门决定能否计分。作者 runtime/package 缺失及权限、存储 IO 不归为候选失败。此检查不解决并发置换或同进程结果伪造。

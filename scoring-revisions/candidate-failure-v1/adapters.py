@@ -153,6 +153,17 @@ exports.row=(id,e)=>exports.isCandidate(e)?{id,pass:false,failureCategory:'candi
         host.write_text(text, encoding="utf-8")
     elif ident in ("remote-files-bughunt", "task-switch-cache"):
         if ident == "remote-files-bughunt":
+            replace(root, "author/grade_impl.py", "def grade(root):", """def missing_candidate_tree(root):
+ import stat
+ try:return not stat.S_ISDIR((Path(root)/'src').lstat().st_mode)
+ except (FileNotFoundError,NotADirectoryError):return True
+
+def grade(root):""")
+            replace(root, "author/grade_impl.py", " rows=[]", " rows=[];missing=missing_candidate_tree(root)")
+            replace(root, "author/grade_impl.py", "d=Path(td);shutil.copytree(Path(root)/'src',d/'src')",
+                    "d=Path(td)\n  if not missing:shutil.copytree(Path(root)/'src',d/'src')")
+            replace(root, "author/grade_impl.py", "  for ident in NEW+OLD:\n   try:",
+                    "  for ident in NEW+OLD:\n   if missing:\n    rows.append({'id':ident,'pass':False,'failureCategory':'candidate_load'});continue\n   try:")
             for name, param in [("checks.mjs", "p"), ("legacy-checks.mjs", "f")]:
                 rel = "author/" + name
                 case = "caseId" if name == "checks.mjs" else "id"
