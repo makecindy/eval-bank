@@ -125,7 +125,7 @@ class RevisionTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 calibration.require_full_failure(result, self.spec)
 
-    def test_checker_protocol_rejects_appended_forgery_and_nonzero_exit(self):
+    def test_checker_protocol_preserves_assertion_failures_but_rejects_abnormal_exits(self):
         adapters = load("evidence_adapters", REV / "adapters.py")
         for ident, version in (("remote-files-bughunt", "v4"), ("task-switch-cache", "v3")):
             target = self.q / ident
@@ -140,18 +140,21 @@ class RevisionTests(unittest.TestCase):
                                 and isinstance(x.value.func, ast.Attribute) and x.value.func.attr == "loads"
                                 for x in n.body))
             parser = compile(ast.fix_missing_locations(ast.Module(body=[node], type_ignores=[])), "evidence", "exec")
-            for mode in ("healthy", "append", "nonzero", "wrong-id", "wrong-type"):
+            for mode in ("healthy", "assertion", "environment", "success", "false-success", "append", "nonzero", "signal", "wrong-id", "wrong-type"):
                 child = subprocess.run([sys.executable, "-c", '''import atexit,json,sys
 mode=sys.argv[1]
 if mode=='append':atexit.register(lambda: print(json.dumps({'id':'case','pass':True})))
-print(json.dumps({'id':'other' if mode=='wrong-id' else 'case','pass':1 if mode=='wrong-type' else False}))
-sys.exit(2 if mode=='nonzero' else 0)
+print(json.dumps({'id':'other' if mode=='wrong-id' else 'case','pass':1 if mode=='wrong-type' else mode in ('success','false-success'),'environment_invalid':mode=='environment'}))
+if mode=='signal':
+ import os,signal
+ os.kill(os.getpid(),signal.SIGTERM)
+sys.exit(2 if mode=='nonzero' else 1 if mode in ('assertion','environment','false-success') else 0)
 ''', mode], capture_output=True, text=True, check=False)
                 scope = dict(json=json, r=child, p=child, ident="case", case="case")
                 exec(parser, scope)
                 row = scope["row" if ident == "remote-files-bughunt" else "o"]
-                self.assertIs(row["pass"], False)
-                self.assertEqual(bool(row.get("environment_invalid")), mode != "healthy")
+                self.assertIs(row["pass"], mode == "success")
+                self.assertEqual(bool(row.get("environment_invalid")), mode not in ("healthy", "assertion", "success"))
 
     def test_changed_or_missing_runtime_rejected_before_execution(self):
         runtime = self.q / "node"
