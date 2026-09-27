@@ -32,15 +32,17 @@
 
 ```sh
 python3 -B scripts/restore-scoring-revision.py composer@v2 <assets> <new-question>
-python3 -B scripts/calibrate-scoring-revision.py <new-question> <new-results> --fault-matrix
+python3 -B scripts/calibrate-scoring-revision.py <new-question> <new-results> --closure-sha256 <trusted-digest> --fault-matrix
 ```
+
+恢复命令在任何候选执行前输出 `closure-sha256`。可信调用方必须在候选无法修改的执行域外保存该值，评分与校准显式传入；禁止每次从候选可写目录重新计算并信任摘要。前检、候选后检及参考后检都核对同一摘要；校准每次启动评分器前也核对清单和入口文件。直接评分入口及调用方代码本身必须受保护，此校验不替代进程/文件系统隔离，也不防同用户任意进程攻击或临时篡改后恢复。
 
 校准先运行完整参考与原始故障基线，再在临时参考副本中注入语法/模块执行故障；不读取旧作答或原始会话。参考无分或未满分时直接停止。`--fault-matrix` 的合成故障不是模型评测，也不能替代设备验收。
 
 显式评一份新作答：
 
 ```sh
-python3 -B <new-question>/author/grade.py <candidate-copy> <new-result.json>
+python3 -B <new-question>/author/grade.py <candidate-copy> <new-result.json> --closure-sha256 <trusted-digest>
 ```
 
 每次评分执行参考前检、候选、参考后检，耗时约为单次评分的三倍；没有健康状态缓存或自动重试。旧评分器的安全超时继续有效，三阶段总耗时可能超过插件一次调用限额。因此本修订目前只提供命令行恢复/校准入口，不声明可直接接入插件的既有 15 分钟调用。发布新分发包及插件接入须另行验证。

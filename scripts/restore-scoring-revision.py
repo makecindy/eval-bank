@@ -71,6 +71,8 @@ def restore(key, assets, output):
                 "revisionSources": {p.name: digest(p) for p in (revision / "adapters.py", revision / "grade.py")},
                 "files": files}
     (output / "scoring-closure.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    print("closure-sha256=" + digest(output / "scoring-closure.json"))
+    print("Retain this digest outside the candidate execution domain before any candidate runs.")
     print("Restored experimental " + spec["revision"] + "; not selected as the default; no grading performed.")
 
 

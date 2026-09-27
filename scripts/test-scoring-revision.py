@@ -53,7 +53,7 @@ class RevisionTests(unittest.TestCase):
 
     def invoke(self, results):
         output = Path(self.tmp.name) / "new-result.json"
-        with patch.object(sys, "argv", ["grade", str(self.q / "candidate"), str(output)]), \
+        with patch.object(sys, "argv", ["grade", str(self.q / "candidate"), str(output), "--closure-sha256", "a" * 64]), \
                 patch.object(self.grade, "verify_closure", return_value={"sourceKey": "fixture@v1"}), \
                 patch.object(self.grade, "run", side_effect=results), contextlib.redirect_stdout(io.StringIO()):
             self.grade.main()
@@ -88,7 +88,7 @@ class RevisionTests(unittest.TestCase):
     def test_existing_score_is_never_overwritten(self):
         output = Path(self.tmp.name) / "old.json"
         output.write_text('{"score":0.75}')
-        with patch.object(sys, "argv", ["grade", str(self.q), str(output)]):
+        with patch.object(sys, "argv", ["grade", str(self.q), str(output), "--closure-sha256", "a" * 64]):
             with self.assertRaises(FileExistsError):
                 self.grade.main()
         self.assertEqual(output.read_text(), '{"score":0.75}')
@@ -97,12 +97,13 @@ class RevisionTests(unittest.TestCase):
         runtime = self.q / "node"
         runtime.write_text("pinned")
         (self.q / "scoring-closure.json").write_text(json.dumps({"files": {"node": hashlib.sha256(b"pinned").hexdigest()}}))
+        expected = hashlib.sha256((self.q / "scoring-closure.json").read_bytes()).hexdigest()
         runtime.write_text("different")
         with self.assertRaises(ValueError):
-            self.grade.verify_closure()
+            self.grade.verify_closure(expected)
         runtime.unlink()
         with self.assertRaises(FileNotFoundError):
-            self.grade.verify_closure()
+            self.grade.verify_closure(expected)
 
     def test_malformed_or_incomplete_result_is_unscored(self):
         output = Path(self.tmp.name) / "raw.json"
@@ -114,6 +115,49 @@ class RevisionTests(unittest.TestCase):
                 actual = self.grade.run(self.q, output)
             self.assertIsNone(actual["score"])
             self.assertEqual(actual["failureCategory"], "author_output")
+
+    def test_real_child_cannot_replace_manifest_and_rehash_modified_checks(self):
+        author = self.q / "author"
+        author.mkdir()
+        shutil.copyfile(REV / "grade.py", author / "grade.py")
+        (self.q / "calibration-reference").mkdir()
+        (self.q / "candidate").mkdir()
+        (self.q / "trusted.txt").write_text("original checks")
+        (author / "legacy_gate.py").write_text('''import hashlib, json, sys
+from pathlib import Path
+q = Path.cwd()
+if Path(sys.argv[1]).name == "candidate":
+    (q / "trusted.txt").write_text("forged checks")
+    manifest = json.loads((q / "scoring-closure.json").read_text())
+    manifest["files"]["trusted.txt"] = hashlib.sha256(b"forged checks").hexdigest()
+    (q / "scoring-closure.json").write_text(json.dumps(manifest))
+Path(sys.argv[2]).write_text(json.dumps({"status":"graded","score":1,"items":{"A":True}}))
+''')
+        manifest = {"sourceKey": "fixture@v1", "files": {
+            p.relative_to(self.q).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in self.q.rglob("*") if p.is_file()}}
+        closure = self.q / "scoring-closure.json"
+        closure.write_text(json.dumps(manifest))
+        expected = hashlib.sha256(closure.read_bytes()).hexdigest()
+        healthy = Path(self.tmp.name) / "healthy.json"
+        command = [sys.executable, "-B", str(author / "grade.py"),
+                   str(self.q / "calibration-reference"), str(healthy)]
+        missing = subprocess.run(command, capture_output=True, timeout=15)
+        self.assertNotEqual(missing.returncode, 0)
+        self.assertFalse(healthy.exists())
+        subprocess.run(command + ["--closure-sha256", expected], check=True,
+                       capture_output=True, timeout=15)
+        self.assertEqual(json.loads(healthy.read_text())["score"], 1)
+        output = Path(self.tmp.name) / "attack.json"
+        subprocess.run([sys.executable, "-B", str(author / "grade.py"),
+                        str(self.q / "candidate"), str(output), "--closure-sha256", expected],
+                       check=True, capture_output=True, timeout=15)
+        result = json.loads(output.read_text())
+        self.assertIsNone(result["score"])
+        self.assertTrue(result["manualReviewRequired"])
+        self.assertNotEqual(hashlib.sha256(closure.read_bytes()).hexdigest(), expected)
+        with self.assertRaises(ValueError):
+            self.grade.verify_closure(expected)
 
     def test_nonzero_with_forged_candidate_output_is_not_scored(self):
         output = Path(self.tmp.name) / "raw.json"

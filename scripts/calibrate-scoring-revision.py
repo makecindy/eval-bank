@@ -1,5 +1,6 @@
 """Explicitly grade reference and baseline into new files; never regrade history."""
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -23,6 +24,7 @@ def main():
     parser.add_argument("question", type=Path, help="Restored experimental question")
     parser.add_argument("output", type=Path, help="New calibration result directory")
     parser.add_argument("--fault-matrix", action="store_true", help="Also run synthetic syntax/load faults in copied reference code")
+    parser.add_argument("--closure-sha256", required=True, help="Trusted digest recorded at restoration")
     args = parser.parse_args()
     q = args.question.resolve()
     spec = json.loads((q / "question.json").read_text(encoding="utf-8"))
@@ -30,9 +32,15 @@ def main():
         raise ValueError("Expected an explicitly restored scoring revision")
     args.output.mkdir(parents=True, exist_ok=False)
     def grade(name, source):
+        raw = (q / "scoring-closure.json").read_bytes()
+        if hashlib.sha256(raw).hexdigest() != args.closure_sha256:
+            raise ValueError("Changed closure manifest")
+        expected_grader = json.loads(raw)["files"]["author/grade.py"]
+        if hashlib.sha256((q / "author/grade.py").read_bytes()).hexdigest() != expected_grader:
+            raise ValueError("Changed grader entrypoint")
         output = (args.output / (name + ".json")).resolve()
         subprocess.run([sys.executable, "-B", str(q / "author/grade.py"), str(source),
-                        str(output)], check=True)
+                        str(output), "--closure-sha256", args.closure_sha256], check=True)
         return json.loads(output.read_text(encoding="utf-8"))
 
     reference = grade("reference", q / "calibration-reference")

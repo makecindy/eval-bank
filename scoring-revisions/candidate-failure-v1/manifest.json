@@ -4,9 +4,9 @@
   "status": "experimental",
   "sources": {
     "scoring-revisions/candidate-failure-v1/adapters.py": "49818a39e379f2bae5f1dc4f8c93a852f7ec7ffffc7b9fe055a664cf01b8185c",
-    "scoring-revisions/candidate-failure-v1/grade.py": "2108169288d1233045122efa54d34623dabb1be9a0f389b519ac0ef459e8a2b8",
-    "scripts/restore-scoring-revision.py": "a1a81abcfb4786fe966542e0ee47f02c40f356b33e4940b834e0578f303b4627",
-    "scripts/calibrate-scoring-revision.py": "c8682d088458a72a1bfdf21b9cdb7d2e010b32da7ff8a4f99430fe3673f19e70"
+    "scoring-revisions/candidate-failure-v1/grade.py": "d4971082a050b9706b8177225888aeb0042e9bf52b216ce9416ac3e2e71643b1",
+    "scripts/restore-scoring-revision.py": "06706fffd127dcc68fc908cca93b2cecbd0f6dd003debd5f24aadface8c22d21",
+    "scripts/calibrate-scoring-revision.py": "21b04feabb16df615c83523d5f166b29ffafe05cb3d760ef3f9511c1e93d66ea"
   },
   "questions": [
     {

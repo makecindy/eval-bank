@@ -3,6 +3,7 @@
 Run only in a trusted, isolated execution environment. Integrity checks are not
 an OS sandbox and do not make hostile candidate code safe to run on a workstation.
 """
+import argparse
 import hashlib
 import json
 import math
@@ -22,8 +23,11 @@ def invalid(category, reason):
             "failureCategory": category, "reason": reason}
 
 
-def verify_closure():
-    manifest = json.loads((Q / "scoring-closure.json").read_text(encoding="utf-8"))
+def verify_closure(expected_digest):
+    raw = (Q / "scoring-closure.json").read_bytes()
+    if hashlib.sha256(raw).hexdigest() != expected_digest:
+        raise ValueError("Changed closure manifest")
+    manifest = json.loads(raw)
     for rel, expected in manifest["files"].items():
         path = Q / rel
         if path.is_symlink() or any(p.is_symlink() for p in path.parents if p != Q.parent):
@@ -72,12 +76,17 @@ def run(source, output):
 
 
 def main():
-    source, output = map(lambda x: Path(x).resolve(), sys.argv[1:3])
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("source", type=Path)
+    parser.add_argument("output", type=Path)
+    parser.add_argument("--closure-sha256", required=True, help="Digest retained by the trusted caller at restoration, never recomputed from candidate-writable files")
+    args = parser.parse_args()
+    source, output = args.source.resolve(), args.output.resolve()
     if output.exists():
         raise FileExistsError("Refusing to overwrite an existing result")
     spec = json.loads((Q / "question.json").read_text(encoding="utf-8"))
     try:
-        closure = verify_closure()
+        closure = verify_closure(args.closure_sha256)
         with tempfile.TemporaryDirectory(prefix="scoring-revision-") as tmp:
             tmp = Path(tmp)
             health = run(Q / "calibration-reference", tmp / "health.json")
@@ -88,8 +97,9 @@ def main():
                 result = run(source, tmp / "candidate.json")
                 # A postflight failure invalidates the attempt, including results
                 # that happened to look like candidate failures.
-                verify_closure()
+                verify_closure(args.closure_sha256)
                 post = run(Q / "calibration-reference", tmp / "postflight.json")
+                verify_closure(args.closure_sha256)
                 if post.get("status") != "graded" or post.get("score") != 1:
                     result = invalid("reference_health", "Reference postflight failed")
                 else:
