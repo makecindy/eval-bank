@@ -166,6 +166,27 @@ exports.row=(id,e)=>exports.isCandidate(e)?{id,pass:false,failureCategory:'candi
  }}
 }};""")
         else:
+            # These three frozen entry dependencies are instrumented before
+            # candidateImport. Validate their shape before copytree/read_text,
+            # without swallowing permissions, IO, or observability failures.
+            replace(root, "author/grade_impl.py", "def grade(root,selected=None):", """def missing_candidate_sources(root):
+ import stat
+ missing=[]
+ for rel in (CHAT+'MessageStream.js','src/apps/desktop/src/renderer/lib/generatedFiles.js',CHAT+'markdownImageTargets.js'):
+  try:
+   if not stat.S_ISREG((root/rel).lstat().st_mode):missing.append(rel)
+  except (FileNotFoundError,NotADirectoryError):missing.append(rel)
+ return missing
+
+def grade(root,selected=None):""")
+            replace(root, "author/grade_impl.py", "root=pathlib.Path(root).resolve(); outputs=[]",
+                    "root=pathlib.Path(root).resolve(); outputs=[]; missing=missing_candidate_sources(root)")
+            replace(root, "author/grade_impl.py", "dst=pathlib.Path(td);shutil.copytree(root/'src',dst/'src')",
+                    "dst=pathlib.Path(td)\n  if not missing:shutil.copytree(root/'src',dst/'src')")
+            replace(root, "author/grade_impl.py", "   f=dst/rel;s=f.read_text();",
+                    "   if missing:break\n   f=dst/rel;s=f.read_text();")
+            replace(root, "author/grade_impl.py", "   try:\n    p=subprocess.run(",
+                    "   if missing:\n    outputs.append({'id':case,'pass':False,'failureCategory':'candidate_load'});continue\n   try:\n    p=subprocess.run(")
             for name in ("scenarios.mjs", "legacy-scenarios.mjs"):
                 rel = "author/" + name
                 path = root / rel

@@ -156,6 +156,46 @@ sys.exit(2 if mode=='nonzero' else 1 if mode in ('assertion','environment','fals
                 self.assertIs(row["pass"], mode == "success")
                 self.assertEqual(bool(row.get("environment_invalid")), mode not in ("healthy", "assertion", "success"))
 
+    def test_cache_instrumentation_inputs_missing_or_nonregular_are_candidate_failures(self):
+        import os
+        adapters = load("cache_shape_adapters", REV / "adapters.py")
+        target = self.q / "cache"
+        shutil.copytree(REPO / "questions/task-switch-cache/v3", target)
+        adapters.apply(target, "task-switch-cache")
+        (target / "reference").mkdir(exist_ok=True)
+        shutil.copy2(target / "candidate/package.json", target / "reference/package.json")
+        grader = load("cache_shape_grader", target / "author/grade_impl.py")
+        paths = [grader.CHAT + "MessageStream.js",
+                 "src/apps/desktop/src/renderer/lib/generatedFiles.js",
+                 grader.CHAT + "markdownImageTargets.js"]
+        for rel in paths:
+            for shape in ("missing", "directory", "fifo"):
+                with self.subTest(path=rel, shape=shape):
+                    candidate = self.q / "input"
+                    shutil.copytree(target / "candidate", candidate)
+                    source = candidate / rel
+                    source.unlink()
+                    if shape == "directory":source.mkdir()
+                    if shape == "fifo":os.mkfifo(source)
+                    # Missing source is handled before copytree can open a FIFO.
+                    with patch.object(grader.subprocess, "run", side_effect=AssertionError("must not execute candidate")):
+                        result = grader.grade(candidate)
+                    self.assertEqual(result["status"], "graded")
+                    self.assertEqual(result["score"], 0)
+                    self.assertTrue(all(value is False for value in result["items"].values()))
+                    self.assertTrue(all(row["failureCategory"] == "candidate_load" for row in result["details"]))
+                    shutil.rmtree(candidate)
+        for error in (PermissionError("denied"), OSError("storage unavailable")):
+            with patch.object(Path, "lstat", side_effect=error), self.assertRaises(type(error)):
+                grader.missing_candidate_sources(target / "candidate")
+        # Equivalent but unobservable source stays outside candidate-failure classification.
+        candidate = self.q / "unobservable"
+        shutil.copytree(target / "candidate", candidate)
+        source = candidate / paths[0]
+        source.write_text(source.read_text().replace("function buildRenderItems(", "function renamedProjection("))
+        with self.assertRaisesRegex(AssertionError, "OBSERVABILITY"):
+            grader.grade(candidate)
+
     def test_changed_or_missing_runtime_rejected_before_execution(self):
         runtime = self.q / "node"
         runtime.write_text("pinned")
