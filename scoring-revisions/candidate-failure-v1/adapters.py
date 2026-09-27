@@ -16,6 +16,17 @@ def replace(root, rel, before, after):
 
 
 def apply(root, ident):
+    # Reject appended JSON, mismatched cases and unsuccessful checker exits.
+    # Candidate and checker still share a process: this is not an authenticated
+    # evidence channel and does not establish adversarial grading isolation.
+    if ident in ("remote-files-bughunt", "task-switch-cache"):
+        proc, row, case = ("r", "row", "ident") if ident == "remote-files-bughunt" else ("p", "o", "case")
+        replace(root, "author/grade_impl.py",
+                f"    try:{row}=json.loads({proc}.stdout.strip().splitlines()[-1])",
+                f"""    try:
+     if {proc}.returncode:raise ValueError('Checker exited unsuccessfully')
+     {row}=json.loads({proc}.stdout)
+     if not isinstance({row},dict) or {row}.get('id')!={case} or type({row}.get('pass')) is not bool:raise ValueError('Invalid checker evidence')""")
     if ident == "mobile-stream-order":
         replace(root, "author/run.mjs",
                 "const [source,bundle,out]=process.argv.slice(2);await build(source,bundle);\nconst api=await import(pathToFileURL(bundle));fs.writeFileSync(out,JSON.stringify(await assess(api)));",

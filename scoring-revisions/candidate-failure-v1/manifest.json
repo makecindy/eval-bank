@@ -3,10 +3,10 @@
   "id": "candidate-failure-v1",
   "status": "experimental",
   "sources": {
-    "scoring-revisions/candidate-failure-v1/adapters.py": "49818a39e379f2bae5f1dc4f8c93a852f7ec7ffffc7b9fe055a664cf01b8185c",
-    "scoring-revisions/candidate-failure-v1/grade.py": "d4971082a050b9706b8177225888aeb0042e9bf52b216ce9416ac3e2e71643b1",
+    "scoring-revisions/candidate-failure-v1/adapters.py": "bd9ce0017d6ed4cd7a4596c9c7339e20c354bd0867c750b0649888a0f5ed9c92",
+    "scoring-revisions/candidate-failure-v1/grade.py": "406699c0bf875bcc69a2411d4bc96e120652413371eaccb484990ae2d3f6d703",
     "scripts/restore-scoring-revision.py": "06706fffd127dcc68fc908cca93b2cecbd0f6dd003debd5f24aadface8c22d21",
-    "scripts/calibrate-scoring-revision.py": "21b04feabb16df615c83523d5f166b29ffafe05cb3d760ef3f9511c1e93d66ea"
+    "scripts/calibrate-scoring-revision.py": "da1646fa953511e32c25c9cac0573095ad7c60d88bf1ab7b27868f6076099b2a"
   },
   "questions": [
     {

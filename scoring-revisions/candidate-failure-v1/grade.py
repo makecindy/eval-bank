@@ -39,6 +39,12 @@ def verify_closure(expected_digest):
 
 
 def run(source, output):
+    # Inspect the submitted tree before the frozen gate exempts editable paths.
+    # This is admission validation, not protection against concurrent mutation.
+    source = source.absolute()
+    if (not source.is_dir() or any(p.is_symlink() for p in (source, *source.parents))
+            or any(p.is_symlink() for p in source.rglob("*"))):
+        return invalid("submission_input", "Linked or missing submission input")
     proc = subprocess.run(
         [sys.executable, "-B", str(Q / "author/legacy_gate.py"), str(source), str(output)],
         cwd=Q, env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"),
@@ -81,7 +87,7 @@ def main():
     parser.add_argument("output", type=Path)
     parser.add_argument("--closure-sha256", required=True, help="Digest retained by the trusted caller at restoration, never recomputed from candidate-writable files")
     args = parser.parse_args()
-    source, output = args.source.resolve(), args.output.resolve()
+    source, output = args.source.absolute(), args.output.resolve()
     if output.exists():
         raise FileExistsError("Refusing to overwrite an existing result")
     spec = json.loads((Q / "question.json").read_text(encoding="utf-8"))

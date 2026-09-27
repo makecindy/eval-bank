@@ -93,6 +93,66 @@ class RevisionTests(unittest.TestCase):
                 self.grade.main()
         self.assertEqual(output.read_text(), '{"score":0.75}')
 
+    def test_submission_links_rejected_before_grader_execution(self):
+        source = self.q / "source"
+        source.mkdir()
+        outside = self.q / "reference"
+        outside.mkdir()
+        (outside / "code.js").write_text("reference")
+        for target in (outside / "code.js", outside, outside / "missing"):
+            link = source / "editable"
+            link.symlink_to(target, target_is_directory=target.is_dir())
+            with patch.object(self.grade.subprocess, "run") as launch:
+                self.assertEqual(self.grade.run(source, self.q / "result")["failureCategory"], "submission_input")
+                launch.assert_not_called()
+            link.unlink()
+        alias = self.q / "alias"
+        alias.symlink_to(source, target_is_directory=True)
+        child = source / "child"
+        child.mkdir()
+        for candidate in (alias, alias / "child", self.q / "missing"):
+            with patch.object(self.grade.subprocess, "run") as launch:
+                self.assertIsNone(self.grade.run(candidate, self.q / "result")["score"])
+                launch.assert_not_called()
+
+    def test_calibration_rejects_partial_credit_and_passing_affected_items(self):
+        calibration = load("calibration", REPO / "scripts/calibrate-scoring-revision.py")
+        good = {"status": "graded", "score": 0, "items": {"A": False}}
+        calibration.require_full_failure(good, self.spec)
+        for result in ({**good, "score": 0.9}, {**good, "items": {"A": True}},
+                       {**good, "items": {}}, {**good, "items": {"A": 0}},
+                       {**good, "status": "environment_invalid"}, {**good, "score": False}):
+            with self.assertRaises(RuntimeError):
+                calibration.require_full_failure(result, self.spec)
+
+    def test_checker_protocol_rejects_appended_forgery_and_nonzero_exit(self):
+        adapters = load("evidence_adapters", REV / "adapters.py")
+        for ident, version in (("remote-files-bughunt", "v4"), ("task-switch-cache", "v3")):
+            target = self.q / ident
+            shutil.copytree(REPO / "questions" / ident / version, target)
+            adapters.apply(target, ident)
+            # Run the transformed production parser block with actual child
+            # stdout, including an exit handler appending a forged success.
+            import ast
+            tree = ast.parse((target / "author/grade_impl.py").read_text())
+            node = next(n for n in ast.walk(tree) if isinstance(n, ast.Try)
+                        and any(isinstance(x, ast.Assign) and isinstance(x.value, ast.Call)
+                                and isinstance(x.value.func, ast.Attribute) and x.value.func.attr == "loads"
+                                for x in n.body))
+            parser = compile(ast.fix_missing_locations(ast.Module(body=[node], type_ignores=[])), "evidence", "exec")
+            for mode in ("healthy", "append", "nonzero", "wrong-id", "wrong-type"):
+                child = subprocess.run([sys.executable, "-c", '''import atexit,json,sys
+mode=sys.argv[1]
+if mode=='append':atexit.register(lambda: print(json.dumps({'id':'case','pass':True})))
+print(json.dumps({'id':'other' if mode=='wrong-id' else 'case','pass':1 if mode=='wrong-type' else False}))
+sys.exit(2 if mode=='nonzero' else 0)
+''', mode], capture_output=True, text=True, check=False)
+                scope = dict(json=json, r=child, p=child, ident="case", case="case")
+                exec(parser, scope)
+                row = scope["row" if ident == "remote-files-bughunt" else "o"]
+                self.assertIs(row["pass"], False)
+                self.assertEqual(bool(row.get("environment_invalid")), mode != "healthy")
+
     def test_changed_or_missing_runtime_rejected_before_execution(self):
         runtime = self.q / "node"
         runtime.write_text("pinned")

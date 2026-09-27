@@ -19,6 +19,16 @@ FAULT_TARGETS = {
 }
 
 
+def require_full_failure(result, spec):
+    expected = {item for group in spec["groups"] for item in group["items"]}
+    items = result.get("items")
+    if (result.get("status") != "graded" or type(result.get("score")) not in (int, float)
+            or result["score"] != 0 or not isinstance(items, dict)
+            or not expected.issubset(items)
+            or any(items[item] is not False for item in expected)):
+        raise RuntimeError("Synthetic whole-module fault must fail every affected item with score zero")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("question", type=Path, help="Restored experimental question")
@@ -53,17 +63,16 @@ def main():
         for name, suffix in [("syntax", "\nconst = ;\n"),
                              ("runtime", "\nthrow new Error('ENVIRONMENT_UNSUPPORTED: synthetic candidate failure');\n")]:
             with tempfile.TemporaryDirectory(prefix="scoring-mutant-") as tmp:
-                source = Path(tmp) / "candidate"
+                source = Path(tmp).resolve() / "candidate"
                 shutil.copytree(q / "calibration-reference", source)
                 target = source / FAULT_TARGETS[spec["id"]]
                 target.write_text(target.read_text(encoding="utf-8") + suffix, encoding="utf-8")
                 result = grade(name, source)
-                if result.get("status") != "graded" or result.get("score", 1) >= 1:
-                    raise RuntimeError(name + " candidate failure was not classified as a scored failure")
+                require_full_failure(result, spec)
         if spec["id"] == "composer":
             for name in ("browser-build", "browser-render"):
                 with tempfile.TemporaryDirectory(prefix="scoring-partial-") as tmp:
-                    source = Path(tmp) / "candidate"
+                    source = Path(tmp).resolve() / "candidate"
                     shutil.copytree(q / "calibration-reference", source)
                     target = source / FAULT_TARGETS[spec["id"]]
                     text = target.read_text(encoding="utf-8")
