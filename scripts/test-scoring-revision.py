@@ -4,6 +4,9 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
+import socket
+import stat
 from pathlib import Path
 import shutil
 import subprocess
@@ -114,6 +117,42 @@ class RevisionTests(unittest.TestCase):
             with patch.object(self.grade.subprocess, "run") as launch:
                 self.assertIsNone(self.grade.run(candidate, self.q / "result")["score"])
                 launch.assert_not_called()
+
+    def test_nested_special_files_rejected_without_opening_or_launching(self):
+        socket_tmp = tempfile.TemporaryDirectory(dir="/tmp", prefix="cf1-")
+        self.addCleanup(socket_tmp.cleanup)
+        source = Path(socket_tmp.name).resolve() / "candidate"
+        nested = source / "src/cache"
+        nested.mkdir(parents=True)
+        (nested / "normal.ts").write_text("export {}")
+        special = nested / "remote-file-cache.ts"
+        os.mkfifo(special)
+        def rejected():
+            with patch.object(self.grade.subprocess, "run") as launch, \
+                    patch.object(Path, "open", side_effect=AssertionError("must not read candidate contents")):
+                result = self.grade.run(source, self.q / "result")
+                self.assertEqual(result["failureCategory"], "submission_input")
+                self.assertIsNone(result["score"])
+                self.assertTrue(result["manualReviewRequired"])
+                launch.assert_not_called()
+        rejected()
+        special.unlink()
+        with socket.socket(socket.AF_UNIX) as endpoint:
+            endpoint.bind(str(special))
+            rejected()
+        special.unlink()
+        # Device creation needs privileges; exercise both device mode branches
+        # while real FIFO/socket cases above prove traversal does not open data.
+        special.write_text("fixture")
+        real_lstat = Path.lstat
+        for mode in (stat.S_IFCHR, stat.S_IFBLK):
+            with self.subTest(mode=mode), patch.object(Path, "lstat", lambda p, **kw: os.stat_result(
+                    (mode, 0, 0, 0, 0, 0, 0, 0, 0, 0)) if p == special else real_lstat(p, **kw)):
+                rejected()
+        self.assertTrue(self.grade.regular_submission_tree(source))
+        with patch.object(Path, "lstat", side_effect=PermissionError("fixture")):
+            with self.assertRaises(PermissionError):
+                self.grade.regular_submission_tree(source)
 
     def test_calibration_rejects_partial_credit_and_passing_affected_items(self):
         calibration = load("calibration", REPO / "scripts/calibrate-scoring-revision.py")

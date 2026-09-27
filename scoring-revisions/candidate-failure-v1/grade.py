@@ -10,6 +10,7 @@ import math
 from fractions import Fraction
 import os
 from pathlib import Path
+import stat
 import subprocess
 import sys
 import tempfile
@@ -38,13 +39,26 @@ def verify_closure(expected_digest):
     return manifest
 
 
+def regular_submission_tree(source):
+    # lstat never opens file contents; only real directories are traversed.
+    pending = [source]
+    while pending:
+        path = pending.pop()
+        mode = path.lstat().st_mode
+        if stat.S_ISDIR(mode):
+            pending.extend(path.iterdir())
+        elif not stat.S_ISREG(mode):
+            return False
+    return True
+
+
 def run(source, output):
     # Inspect the submitted tree before the frozen gate exempts editable paths.
     # This is admission validation, not protection against concurrent mutation.
     source = source.absolute()
     if (not source.is_dir() or any(p.is_symlink() for p in (source, *source.parents))
-            or any(p.is_symlink() for p in source.rglob("*"))):
-        return invalid("submission_input", "Linked or missing submission input")
+            or not regular_submission_tree(source)):
+        return invalid("submission_input", "Missing, linked or non-regular submission input")
     proc = subprocess.run(
         [sys.executable, "-B", str(Q / "author/legacy_gate.py"), str(source), str(output)],
         cwd=Q, env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"),
