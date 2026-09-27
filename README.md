@@ -9,6 +9,7 @@
 - [评分规则](docs/scoring.md)
 - [冻结前检查清单](docs/calibration-checklist.md)
 - [版本与发布](docs/versioning.md)
+- [独立评分修订与校准](docs/scoring-revision-candidate-failure-v1.md)（显式选择，不替换默认题库）
 - [历史演进](docs/history.md)
 
 每题满分 1 分，按冻结能力组评估实际交付行为。源码、评分器与控制样本可审阅；答题时只向模型提供 candidate 材料。公开评分器不能替代运行时隔离，能够接触作者资料的作答必须单列。

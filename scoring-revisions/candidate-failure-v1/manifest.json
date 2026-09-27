@@ -1,0 +1,822 @@
+{
+  "schemaVersion": 1,
+  "id": "candidate-failure-v1",
+  "status": "experimental",
+  "sources": {
+    "scoring-revisions/candidate-failure-v1/adapters.py": "49818a39e379f2bae5f1dc4f8c93a852f7ec7ffffc7b9fe055a664cf01b8185c",
+    "scoring-revisions/candidate-failure-v1/grade.py": "2108169288d1233045122efa54d34623dabb1be9a0f389b519ac0ef459e8a2b8",
+    "scripts/restore-scoring-revision.py": "a1a81abcfb4786fe966542e0ee47f02c40f356b33e4940b834e0578f303b4627",
+    "scripts/calibrate-scoring-revision.py": "c8682d088458a72a1bfdf21b9cdb7d2e010b32da7ff8a4f99430fe3673f19e70"
+  },
+  "questions": [
+    {
+      "sourceKey": "audio@v2",
+      "sourceManifestSha256": "ab707d5c130fb3ab63e624360dae364297ccdefe54adb1c63a679e3acb81b399",
+      "question": {
+        "id": "audio",
+        "revision": "v2-cf1",
+        "title": "连续音频采集与转换：质量与组合场景升级",
+        "scoringVersion": "quality-composition-v1+candidate-failure-v1",
+        "groups": [
+          {
+            "id": "A01",
+            "weight": "1/8",
+            "mode": "all",
+            "items": [
+              "A01"
+            ]
+          },
+          {
+            "id": "A02",
+            "weight": "1/8",
+            "mode": "all",
+            "items": [
+              "A02"
+            ]
+          },
+          {
+            "id": "A03",
+            "weight": "1/8",
+            "mode": "all",
+            "items": [
+              "A03"
+            ]
+          },
+          {
+            "id": "A04",
+            "weight": "1/8",
+            "mode": "all",
+            "items": [
+              "A04"
+            ]
+          },
+          {
+            "id": "A05",
+            "weight": "1/8",
+            "mode": "all",
+            "items": [
+              "A05"
+            ]
+          },
+          {
+            "id": "A06",
+            "weight": "1/8",
+            "mode": "all",
+            "items": [
+              "A06"
+            ]
+          },
+          {
+            "id": "A07",
+            "weight": "1/8",
+            "mode": "all",
+            "items": [
+              "A07"
+            ]
+          },
+          {
+            "id": "A08",
+            "weight": "1/8",
+            "mode": "all",
+            "items": [
+              "A08"
+            ]
+          }
+        ],
+        "changeNote": "Explicit candidate failure classification after reference health checks; opt-in only.",
+        "environment": "macOS arm64 bundled Node, OS sandbox, real worklet/fallback logic; no browser microphone or ASR",
+        "graderCommand": [
+          "python3",
+          "-B",
+          "author/grade.py",
+          "{candidateRoot}",
+          "{outputJson}"
+        ],
+        "status": "experimental",
+        "scoringRevision": "candidate-failure-v1",
+        "sourceKey": "audio@v2"
+      },
+      "referenceSources": {
+        "questions/audio/v2/reference-overlay/WebMicAudioEngine.ts": "3381b1e366dd093f6273cc024ddbd0410ed57c1a7333c84743c1a7022e041d34",
+        "questions/audio/v2/reference-overlay/pcm16k-worklet.js": "956ded5347923f0d80bd6be899bf1bcce4001604a3bf9fc9fd93dd0f1d09b705"
+      }
+    },
+    {
+      "sourceKey": "island@v2",
+      "sourceManifestSha256": "0003d57cd5043226e24ba37c8a94f3346be1500cd8c796465c326477b3b77415",
+      "question": {
+        "id": "island",
+        "revision": "v2-cf1",
+        "title": "灵动岛通知与窗口交接：质量与组合场景升级",
+        "scoringVersion": "quality-composition-v1+candidate-failure-v1",
+        "groups": [
+          {
+            "id": "I01",
+            "weight": "1/11",
+            "mode": "all",
+            "items": [
+              "I01"
+            ]
+          },
+          {
+            "id": "I02",
+            "weight": "1/11",
+            "mode": "all",
+            "items": [
+              "I02"
+            ]
+          },
+          {
+            "id": "I03",
+            "weight": "1/11",
+            "mode": "all",
+            "items": [
+              "I03"
+            ]
+          },
+          {
+            "id": "I04",
+            "weight": "1/11",
+            "mode": "all",
+            "items": [
+              "I04"
+            ]
+          },
+          {
+            "id": "I05",
+            "weight": "1/11",
+            "mode": "all",
+            "items": [
+              "I05"
+            ]
+          },
+          {
+            "id": "I06",
+            "weight": "1/11",
+            "mode": "all",
+            "items": [
+              "I06"
+            ]
+          },
+          {
+            "id": "I07",
+            "weight": "1/11",
+            "mode": "all",
+            "items": [
+              "I07"
+            ]
+          },
+          {
+            "id": "I08",
+            "weight": "1/11",
+            "mode": "all",
+            "items": [
+              "I08"
+            ]
+          },
+          {
+            "id": "I09",
+            "weight": "1/11",
+            "mode": "all",
+            "items": [
+              "I09"
+            ]
+          },
+          {
+            "id": "I10",
+            "weight": "1/11",
+            "mode": "all",
+            "items": [
+              "I10"
+            ]
+          },
+          {
+            "id": "I11",
+            "weight": "1/11",
+            "mode": "all",
+            "items": [
+              "I11"
+            ]
+          }
+        ],
+        "changeNote": "Explicit candidate failure classification after reference health checks; opt-in only.",
+        "environment": "macOS arm64 bundled Node/esbuild; real state/service and virtual clock, no native window",
+        "graderCommand": [
+          "python3",
+          "-B",
+          "author/grade.py",
+          "{candidateRoot}",
+          "{outputJson}"
+        ],
+        "status": "experimental",
+        "scoringRevision": "candidate-failure-v1",
+        "sourceKey": "island@v2"
+      },
+      "referenceSources": {
+        "questions/island/v2/reference-overlay/apps/desktop/src/main/agent-island/service.ts": "28a3d0829c0d3eecd18c7320966b56f4351049523baa662935b2fc51ca3508a2",
+        "questions/island/v2/reference-overlay/apps/desktop/src/main/agent-island/state.ts": "7c3921ebb759437e11378609e141a343ff201be5298b6d928f888b0d08919b40"
+      }
+    },
+    {
+      "sourceKey": "recovery@v2",
+      "sourceManifestSha256": "f2c0797185aa65d31bb5ae49a0e190f9e4809030102fd3c1e30cf1c5ea807a7e",
+      "question": {
+        "id": "recovery",
+        "revision": "v2-cf1",
+        "title": "协作 Worker 生命周期与自动恢复：质量与组合场景升级",
+        "scoringVersion": "quality-composition-v1+candidate-failure-v1",
+        "groups": [
+          {
+            "id": "R01",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R01"
+            ]
+          },
+          {
+            "id": "R02",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R02"
+            ]
+          },
+          {
+            "id": "R03",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R03"
+            ]
+          },
+          {
+            "id": "R04",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R04"
+            ]
+          },
+          {
+            "id": "R06",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R06"
+            ]
+          },
+          {
+            "id": "R07",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R07"
+            ]
+          },
+          {
+            "id": "R08",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R08"
+            ]
+          },
+          {
+            "id": "R09",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R09"
+            ]
+          },
+          {
+            "id": "R10",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R10"
+            ]
+          },
+          {
+            "id": "R11",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R11"
+            ]
+          },
+          {
+            "id": "R12",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R12"
+            ]
+          },
+          {
+            "id": "R13",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R13"
+            ]
+          },
+          {
+            "id": "R14",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R14"
+            ]
+          },
+          {
+            "id": "R15",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R15"
+            ]
+          },
+          {
+            "id": "R16",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R16"
+            ]
+          },
+          {
+            "id": "R17",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R17"
+            ]
+          },
+          {
+            "id": "R18",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R18"
+            ]
+          },
+          {
+            "id": "R19",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R19"
+            ]
+          },
+          {
+            "id": "R20",
+            "weight": "1/19",
+            "mode": "all",
+            "items": [
+              "R20"
+            ]
+          }
+        ],
+        "changeNote": "Explicit candidate failure classification after reference health checks; opt-in only.",
+        "environment": "macOS arm64 bundled Node/TypeScript; real register/coordinator/Orca, virtual timer and explicit boundary adapters",
+        "graderCommand": [
+          "python3",
+          "-B",
+          "author/grade.py",
+          "{candidateRoot}",
+          "{outputJson}"
+        ],
+        "status": "experimental",
+        "scoringRevision": "candidate-failure-v1",
+        "sourceKey": "recovery@v2"
+      },
+      "referenceSources": {
+        "questions/recovery/v2/reference-overlay/apps/desktop/src/main/maker-ipc/autoResumeBookkeeping.ts": "dfb9292c9fb37ca5420574830073c8d8275b1a7c080675160851fa882271f8c8",
+        "questions/recovery/v2/reference-overlay/apps/desktop/src/main/maker-ipc/register.ts": "1f2f7d7fd1bc86739b3b12a6c363da6512569d5be0deaf726dc5636baa541f04"
+      }
+    },
+    {
+      "sourceKey": "composer@v2",
+      "sourceManifestSha256": "80b77bb41ffad003dfeba8fc45d2493712ac488991823d51164683a8e77c95b2",
+      "question": {
+        "id": "composer",
+        "revision": "v2-cf1",
+        "title": "输入框发送与草稿生命周期：质量与组合场景升级",
+        "scoringVersion": "quality-composition-v1+candidate-failure-v1",
+        "groups": [
+          {
+            "id": "immediate-clear",
+            "weight": "1/6",
+            "mode": "ratio",
+            "items": [
+              "C01"
+            ]
+          },
+          {
+            "id": "failure-recovery",
+            "weight": "1/6",
+            "mode": "ratio",
+            "items": [
+              "C04",
+              "C05"
+            ]
+          },
+          {
+            "id": "next-draft",
+            "weight": "1/6",
+            "mode": "ratio",
+            "items": [
+              "C03",
+              "C06",
+              "C10"
+            ]
+          },
+          {
+            "id": "task-isolation",
+            "weight": "1/6",
+            "mode": "ratio",
+            "items": [
+              "C07",
+              "C08",
+              "C09"
+            ]
+          },
+          {
+            "id": "home-handoff",
+            "weight": "1/6",
+            "mode": "ratio",
+            "items": [
+              "C11",
+              "C12",
+              "C13"
+            ]
+          },
+          {
+            "id": "focus",
+            "weight": "1/6",
+            "mode": "ratio",
+            "items": [
+              "C17"
+            ]
+          }
+        ],
+        "changeNote": "Explicit candidate failure classification after reference health checks; opt-in only.",
+        "environment": "macOS arm64 bundled Node/React/Tiptap/Chromium; real component and keyboard, fake host acceptance",
+        "graderCommand": [
+          "python3",
+          "-B",
+          "author/grade.py",
+          "{candidateRoot}",
+          "{outputJson}"
+        ],
+        "status": "experimental",
+        "scoringRevision": "candidate-failure-v1",
+        "sourceKey": "composer@v2"
+      },
+      "referenceSources": {
+        "questions/composer/v2/reference-overlay/apps/desktop/src/renderer/components/new-chat/ChatInput.tsx": "dd5f20c5d70bf30663da2013ae6f512197f2411a1b587229d2348d25a6f4fe35",
+        "questions/composer/v2/reference-overlay/apps/desktop/src/renderer/components/new-chat/useComposerSendFocusRestore.ts": "435d1ea9bccb915bf0d90948c32dc8aa7f5cca422d98774dcb8a083656795f09"
+      }
+    },
+    {
+      "sourceKey": "mobile-stream-order@v3",
+      "sourceManifestSha256": "26084bd3112336037fa9c129d1762fbed6af6fa79dc67bc052b45257dac16c23",
+      "question": {
+        "id": "mobile-stream-order",
+        "revision": "v3-cf1",
+        "title": "手机历史与流式消息交接：质量与组合场景升级",
+        "scoringVersion": "quality-composition-v1+candidate-failure-v1",
+        "groups": [
+          {
+            "id": "C01",
+            "weight": "1/4",
+            "mode": "all",
+            "items": [
+              "C01"
+            ]
+          },
+          {
+            "id": "C02",
+            "weight": "1/4",
+            "mode": "all",
+            "items": [
+              "C02"
+            ]
+          },
+          {
+            "id": "C03",
+            "weight": "1/4",
+            "mode": "all",
+            "items": [
+              "C03"
+            ]
+          },
+          {
+            "id": "C04",
+            "weight": "1/4",
+            "mode": "all",
+            "items": [
+              "C04"
+            ]
+          }
+        ],
+        "changeNote": "Explicit candidate failure classification after reference health checks; opt-in only.",
+        "environment": "macOS arm64 bundled Node/esbuild; shared history and actual mobile render model, no React Native view",
+        "graderCommand": [
+          "python3",
+          "-B",
+          "author/grade.py",
+          "{candidateRoot}",
+          "{outputJson}"
+        ],
+        "status": "experimental",
+        "scoringRevision": "candidate-failure-v1",
+        "sourceKey": "mobile-stream-order@v3"
+      },
+      "referenceSources": {
+        "questions/mobile-stream-order/v3/reference-overlay/apps/mobile/src/session/messageNormalize.ts": "65fb6e6e98d06a7b48d679f1d167ce4943d39274a67eea6c7cf8e9d95f4e7557",
+        "questions/mobile-stream-order/v3/reference-overlay/apps/mobile/src/session/messageRenderModel.ts": "dd7c42f93fb2659a43da966a528e44d5a440b3f6ce221a7488cb08a54136242c",
+        "questions/mobile-stream-order/v3/reference-overlay/apps/mobile/src/session/mobileHistoryRender.ts": "90eec2d74c9a56e4c92189b7e5a041decdb15ff0e69fae17c3a844f34b23d587",
+        "questions/mobile-stream-order/v3/reference-overlay/apps/mobile/src/session/subagentGrouping.ts": "20f9c3122dac432ccb106b34051a41a34740bf3e314c33597db36ba972a82d04",
+        "questions/mobile-stream-order/v3/reference-overlay/packages/maker-shared/src/historyViewRender.ts": "c7474f0cb9e09464b0f09046e94d5b6f1d7dcad890fd5794a202f2c34052678c"
+      }
+    },
+    {
+      "sourceKey": "remote-files-bughunt@v4",
+      "sourceManifestSha256": "8858c36536848e4f21852333723ce635b1f7cb0e499cdbb523e47711a1a406c0",
+      "question": {
+        "id": "remote-files-bughunt",
+        "revision": "v4-cf1",
+        "scoringVersion": "quality-composition-v1+candidate-failure-v1",
+        "title": "远程文件工作区：质量与组合场景升级",
+        "changeNote": "Explicit candidate failure classification after reference health checks; opt-in only.",
+        "environment": "Node 22+ strip-types, real local fs and loopback HTTP; no real remote/Electron",
+        "graderCommand": [
+          "python3",
+          "-B",
+          "author/grade.py",
+          "{candidateRoot}",
+          "{outputJson}"
+        ],
+        "groups": [
+          {
+            "id": "B01",
+            "weight": "1/10",
+            "mode": "all",
+            "items": [
+              "B01"
+            ]
+          },
+          {
+            "id": "B02",
+            "weight": "1/10",
+            "mode": "all",
+            "items": [
+              "B02"
+            ]
+          },
+          {
+            "id": "B03",
+            "weight": "1/10",
+            "mode": "all",
+            "items": [
+              "B03",
+              "B03b"
+            ]
+          },
+          {
+            "id": "B04",
+            "weight": "1/10",
+            "mode": "all",
+            "items": [
+              "B04"
+            ]
+          },
+          {
+            "id": "B05",
+            "weight": "1/10",
+            "mode": "all",
+            "items": [
+              "B05"
+            ]
+          },
+          {
+            "id": "B06",
+            "weight": "1/10",
+            "mode": "all",
+            "items": [
+              "B06"
+            ]
+          },
+          {
+            "id": "V01-core",
+            "weight": "1/20",
+            "mode": "all",
+            "items": [
+              "V01core"
+            ]
+          },
+          {
+            "id": "V01-edge",
+            "weight": "1/40",
+            "mode": "all",
+            "items": [
+              "V01core",
+              "V01edge"
+            ]
+          },
+          {
+            "id": "V01-guard",
+            "weight": "1/40",
+            "mode": "all",
+            "items": [
+              "V01core",
+              "V01guard"
+            ]
+          },
+          {
+            "id": "V02-core",
+            "weight": "1/20",
+            "mode": "all",
+            "items": [
+              "V02core"
+            ]
+          },
+          {
+            "id": "V02-edge",
+            "weight": "1/40",
+            "mode": "all",
+            "items": [
+              "V02core",
+              "V02edge"
+            ]
+          },
+          {
+            "id": "V02-guard",
+            "weight": "1/40",
+            "mode": "all",
+            "items": [
+              "V02core",
+              "V02guard"
+            ]
+          },
+          {
+            "id": "V03-core",
+            "weight": "1/20",
+            "mode": "all",
+            "items": [
+              "V03core"
+            ]
+          },
+          {
+            "id": "V03-edge",
+            "weight": "1/40",
+            "mode": "all",
+            "items": [
+              "V03core",
+              "V03edge"
+            ]
+          },
+          {
+            "id": "V03-guard",
+            "weight": "1/40",
+            "mode": "all",
+            "items": [
+              "V03core",
+              "V03guard"
+            ]
+          },
+          {
+            "id": "V04-core",
+            "weight": "1/20",
+            "mode": "all",
+            "items": [
+              "V04core"
+            ]
+          },
+          {
+            "id": "V04-edge",
+            "weight": "1/40",
+            "mode": "all",
+            "items": [
+              "V04core",
+              "V04edge"
+            ]
+          },
+          {
+            "id": "V04-guard",
+            "weight": "1/40",
+            "mode": "all",
+            "items": [
+              "V04core",
+              "V04guard"
+            ]
+          }
+        ],
+        "status": "experimental",
+        "scoringRevision": "candidate-failure-v1",
+        "sourceKey": "remote-files-bughunt@v4"
+      },
+      "referenceSources": {
+        "questions/remote-files-bughunt/v4/reference-overlay/src/cache/remote-file-cache.ts": "c08a96ccfc00be7558608612e51403fd73eb74986422d5ad715d7d196960da53",
+        "questions/remote-files-bughunt/v4/reference-overlay/src/path/workdirPath.ts": "de736539315a2018b030a16357e4d2ef5aedccc4f2d6e80bce9649a2565aedf2",
+        "questions/remote-files-bughunt/v4/reference-overlay/src/preview/html-preview.ts": "5e19c5e7534b6df1ede0245afbee65631904d52ae0005a3ef07a268c7504108a",
+        "questions/remote-files-bughunt/v4/reference-overlay/src/transport/fileAccess.ts": "ae776b910478954b6535b91686cec5218b528674ebcca1dd111eada4fab06198"
+      }
+    },
+    {
+      "sourceKey": "task-switch-cache@v3",
+      "sourceManifestSha256": "b1ef9e738204c45f31bdebeb1918e3c429e38530d39019acc04476fb85f319e0",
+      "question": {
+        "id": "task-switch-cache",
+        "revision": "v3-cf1",
+        "scoringVersion": "quality-composition-v1+candidate-failure-v1",
+        "title": "消息投影与多层缓存：质量与组合场景升级",
+        "status": "experimental",
+        "changeNote": "Explicit candidate failure classification after reference health checks; opt-in only.",
+        "environment": "macOS arm64 bundled Node; historical production pure business closure, no React/Electron/network",
+        "graderCommand": [
+          "python3",
+          "-B",
+          "author/grade.py",
+          "{candidateRoot}",
+          "{outputJson}"
+        ],
+        "groups": [
+          {
+            "id": "parsing",
+            "weight": "1/6",
+            "mode": "ratio",
+            "items": [
+              "parsing-negative",
+              "parsing-markdown"
+            ]
+          },
+          {
+            "id": "media",
+            "weight": "1/6",
+            "mode": "ratio",
+            "items": [
+              "media-array-isolation",
+              "media-handoff"
+            ]
+          },
+          {
+            "id": "projection",
+            "weight": "1/6",
+            "mode": "ratio",
+            "items": [
+              "projection-context",
+              "projection-internal-change"
+            ]
+          },
+          {
+            "id": "cards",
+            "weight": "1/6",
+            "mode": "ratio",
+            "items": [
+              "cards-snapshot",
+              "cards-ownership"
+            ]
+          },
+          {
+            "id": "owner",
+            "weight": "1/6",
+            "mode": "ratio",
+            "items": [
+              "owner-generation"
+            ]
+          },
+          {
+            "id": "bounded-reuse",
+            "weight": "1/6",
+            "mode": "ratio",
+            "items": [
+              "bounded-reuse-lru",
+              "bounded-reuse-quotas",
+              "bounded-reuse-accounting"
+            ]
+          }
+        ],
+        "regressionItems": [
+          "R01",
+          "R02",
+          "R03",
+          "R04"
+        ],
+        "sourceCommit": "2e660c3bebcb1f902f37d0a1c089e788f31f4807",
+        "scoringRevision": "candidate-failure-v1",
+        "sourceKey": "task-switch-cache@v3"
+      },
+      "referenceSources": {
+        "questions/task-switch-cache/v3/reference-overlay/src/apps/desktop/src/renderer/components/chat/AgentActionRow.js": "de03b5d27b015aaee5c09f2ff7d7948c5706d5d6f1780162ef85f1e9ebbf89f3",
+        "questions/task-switch-cache/v3/reference-overlay/src/apps/desktop/src/renderer/components/chat/MessageStream.js": "b99115893300cb3e34e7c49d86a38e79bd8f4fc71dfb2ad6e91c918caf93dd4f",
+        "questions/task-switch-cache/v3/reference-overlay/src/apps/desktop/src/renderer/components/chat/generatedFilesProjection.js": "21b4a0d0be32de137289a9b037542edd593fe988a258de4277087feff725c90c",
+        "questions/task-switch-cache/v3/reference-overlay/src/apps/desktop/src/renderer/components/chat/markdownImageTargets.js": "da410bfe60abc86590dc96762faa17e8187ee04acdbc72cb8de907ad03a9805e",
+        "questions/task-switch-cache/v3/reference-overlay/src/apps/desktop/src/renderer/contexts/dataOwnerGeneration.js": "ec58284d12cdb5e551bd8d412e5be9dc58465d155fc41431802ca3bb7c838225"
+      }
+    }
+  ]
+}
