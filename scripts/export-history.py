@@ -4,6 +4,7 @@ Run only in trusted local trees whose contents and directory structure remain
 unchanged for the duration of the export. Supplied roots are resolved first:
 root and ancestor aliases are allowed unless the resolved trees overlap.
 Paths derived beneath the resolved output root must not contain symlinks.
+No output may be the same file as a record or summary input, including aliases.
 These checks are not a security boundary against concurrent modification.
 Export to a maintainer-owned review directory, not a live deployment tree.
 Replacement preserves POSIX mode bits, not ownership, ACLs or extended attributes.
@@ -228,9 +229,12 @@ def main():
     sources = sorted((archive/'question-bank/results').glob('*.json'))
     if len(sources) != HISTORICAL_RECORD_COUNT:
         p.error('Expected exactly 346 sealed historical records; refusing to replace public results')
+    input_files = set()
     records=[]
     run_ids=set()
     for source in sources:
+        info = source.stat()
+        input_files.add((info.st_dev, info.st_ino))
         source_bytes = source.read_bytes()
         raw=json.loads(source_bytes)
         validate_record(raw)
@@ -250,7 +254,10 @@ def main():
         p.error('Historical run IDs do not match the sealed set; refusing to replace public results')
     pending = [(output/'results/historical-records.json', records)]
     for name in REPORTS:
-        raw=json.loads((archive/'reports'/name/'summary.json').read_text(encoding='utf-8'))
+        source = archive/'reports'/name/'summary.json'
+        info = source.stat()
+        input_files.add((info.st_dev, info.st_ino))
+        raw=json.loads(source.read_text(encoding='utf-8'))
         validate_summary(raw, name)
         row={k:raw[k] for k in SUMMARY if k in raw}
         row['questions']=public_questions(raw)
@@ -264,8 +271,12 @@ def main():
             p.error('Output destination overlaps the private archive')
         if any(part.is_symlink() for part in (path, *path.parents)):
             p.error('Paths beneath the resolved output root must not contain symlinks')
-        if path.exists() and (not path.is_file() or path.stat().st_nlink != 1):
-            p.error('Output destination must be a regular file with a single link')
+        if path.exists():
+            info = path.stat()
+            if (info.st_dev, info.st_ino) in input_files:
+                p.error('Output destination resolves to an input source')
+            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+                p.error('Output destination must be a regular file with a single link')
     # Finish every serialization and write before replacing any public file.
     # Stage beside each destination so replacement stays on the same filesystem.
     staged = []

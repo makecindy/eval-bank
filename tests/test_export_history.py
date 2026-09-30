@@ -2,6 +2,7 @@ import importlib.util
 import hashlib
 import json
 import os
+import shutil
 import stat
 from pathlib import Path
 import subprocess
@@ -160,6 +161,65 @@ class ExportTests(unittest.TestCase):
     def test_nested_symlink(self):
         (self.output / 'reports').symlink_to(self.archive / 'reports', target_is_directory=True)
         self.assert_failure_preserves()
+
+    def test_archive_aliases_cannot_be_replaced_by_any_export(self):
+        for family in ('record', 'summary'):
+            for directory_alias, case_alias in ((False, False), (True, False), (False, True), (True, True)):
+                for destination_index in range(4):
+                    # A summary-directory alias retains the summary.json filename.
+                    if family == 'summary' and directory_alias and destination_index == 0:
+                        continue
+                    with self.subTest(family=family, directory_alias=directory_alias, case_alias=case_alias, destination=destination_index), tempfile.TemporaryDirectory(dir=self.root) as temporary:
+                        root = Path(temporary)
+                        archive, output = root / 'private', root / 'public'
+                        shutil.copytree(self.archive, archive)
+                        destinations = [output / 'results/historical-records.json',
+                                        *(output / 'reports' / name / 'summary.json' for name in export.REPORTS)]
+                        for destination in destinations:
+                            destination.parent.mkdir(parents=True, exist_ok=True)
+                            destination.write_text('existing export')
+                        source = (archive / 'question-bank/results/one.json' if family == 'record'
+                                  else archive / 'reports' / export.REPORTS[0] / 'summary.json')
+                        destination = destinations[destination_index]
+                        if directory_alias:
+                            parent = source.parent
+                            for child in parent.iterdir():
+                                child.replace(destination if child == source else destination.parent / child.name)
+                            parent.rmdir()
+                            alias = parent
+                        else:
+                            source.replace(destination)
+                            alias = source
+                        alias_target = destination.parent if directory_alias else destination
+                        if case_alias:
+                            alias_target = alias_target.with_name(alias_target.name.upper())
+                            if not alias_target.exists():
+                                self.skipTest('case-insensitive filesystem required for spelling aliases')
+                        alias.symlink_to(alias_target, target_is_directory=directory_alias)
+                        before = {p: p.read_bytes() for p in root.rglob('*.json')}
+                        paths = set(root.rglob('*'))
+                        result = subprocess.run([sys.executable, str(SCRIPT), str(archive), str(output)], capture_output=True)
+                        self.assertNotEqual(result.returncode, 0, result.stderr)
+                        self.assertIn(b'Output destination resolves to an input source', result.stderr)
+                        self.assertEqual(before, {p: p.read_bytes() for p in root.rglob('*.json')})
+                        self.assertEqual(paths, set(root.rglob('*')))
+                        self.assertTrue(alias.is_symlink())
+
+    def test_archive_aliases_to_independent_sources_remain_supported(self):
+        external = self.root / 'independent'
+        external.mkdir()
+        sources = [self.source.parent, self.archive / 'reports' / export.REPORTS[0],
+                   self.archive / 'reports' / export.REPORTS[1] / 'summary.json']
+        for index, source in enumerate(sources):
+            target = external / str(index)
+            directory = source.is_dir()
+            source.rename(target)
+            source.symlink_to(target, target_is_directory=directory)
+        before = {p: p.read_bytes() for p in external.rglob('*') if p.is_file()}
+        result = self.run_export()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(json.loads(self.target.read_text())), 346)
+        self.assertEqual(before, {p: p.read_bytes() for p in external.rglob('*') if p.is_file()})
 
     def test_hardlink(self):
         self.target.unlink()
