@@ -32,7 +32,7 @@ class ExportTests(unittest.TestCase):
         self.valid_record = {k: 'fixture' for k in export.IDENTITY}
         self.valid_record.update(runId=self.run_ids[0], manifestSha256=self.manifest_hashes['task-switch-cache', 'v1'], status='graded', scoreExact='1/3',
                                  configurationId='gpt-6-astra / codex / medium', model='gpt-6-astra',
-                                 harness='codex', effort='medium', questionId='task-switch-cache', revision='v1')
+                                 harness='codex', effort='medium', questionId='task-switch-cache', revision='v1', sampleKind='independent')
         self.source.write_text(json.dumps({**self.valid_record, 'scoreExact': '1/3', 'items': {'D01a': True}, 'regressions': {'R01': False}, 'privateNote': 'SECRET'}))
         for index, run_id in enumerate(self.run_ids[1:]):
             self.source.with_name(f'record-{index:03}.json').write_text(json.dumps({**self.valid_record, 'runId': run_id}))
@@ -71,6 +71,36 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(result['scoreExact'], '1/3')
         self.assertEqual(result['items'], {'D01a': True})
         self.assertNotIn('SECRET', self.target.read_text())
+
+    def test_unknown_sample_kind_preserves_all_files(self):
+        for status in ('graded', 'environment_invalid'):
+            for kind in ('unknown', 'independant', 'Independent', ' historical_import', 'reassessment ', 'assisted-revision'):
+                with self.subTest(status=status, kind=kind):
+                    raw = {**self.valid_record, 'status': status, 'sampleKind': kind,
+                           'scoreExact': None if status == 'environment_invalid' else '1/3'}
+                    self.source.write_text(json.dumps(raw))
+                    self.target.write_text('existing results')
+                    self.assert_failure_preserves(with_summaries=True)
+
+    def test_unknown_sample_kind_does_not_create_output(self):
+        self.source.write_text(json.dumps({**self.valid_record, 'sampleKind': 'unknown'}))
+        fresh = self.root / 'fresh-output'
+        self.assert_failure_preserves(fresh, with_summaries=True)
+        self.assertFalse(fresh.exists())
+
+    def test_sealed_sample_kinds_preserved(self):
+        for status in ('graded', 'environment_invalid'):
+            for kind in ('independent', 'historical_import', 'reassessment', 'assisted_revision'):
+                with self.subTest(status=status, kind=kind):
+                    raw = {**self.valid_record, 'status': status, 'sampleKind': kind,
+                           'scoreExact': None if status == 'environment_invalid' else '1/3'}
+                    self.source.write_text(json.dumps(raw))
+                    before = {p: p.read_bytes() for p in self.archive.rglob('*.json')}
+                    result = self.run_export()
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    exported = next(row for row in json.loads(self.target.read_text()) if row['runId'] == raw['runId'])
+                    self.assertEqual({key: exported[key] for key in raw}, raw)
+                    self.assertEqual(before, {p: p.read_bytes() for p in self.archive.rglob('*.json')})
 
     @unittest.skipUnless(os.name == 'posix', 'POSIX file-mode semantics')
     def test_staging_preserves_existing_modes_and_new_public_readability(self):

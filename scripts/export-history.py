@@ -102,6 +102,8 @@ def validate_score(raw, nullable=False):
 def validate_record(raw):
     if not isinstance(raw, dict) or any(not isinstance(raw.get(k), str) or not raw[k].strip() for k in IDENTITY):
         raise ValueError('Missing or invalid public result identity')
+    if raw['sampleKind'] not in ('independent', 'historical_import', 'reassessment', 'assisted_revision'):
+        raise ValueError('Unknown historical sample kind')
     configuration = tuple(raw[field] for field in ('model', 'harness', 'effort'))
     # Compare complete strings: model names may themselves contain a slash.
     if raw['configurationId'] not in {separator.join(configuration) for separator in (' / ', '/', '|')}:
