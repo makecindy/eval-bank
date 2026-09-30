@@ -81,14 +81,19 @@ def validate_record(raw):
     cost = raw.get('costUSD')
     if cost is not None and (type(cost) not in (int, float) or not math.isfinite(cost) or cost < 0):
         raise ValueError('Invalid public costUSD')
+    timestamps = {}
     for field in ('startUtc', 'endUtc', 'timeSource'):
         value = raw.get(field)
         if value is None:
             continue
         if not isinstance(value, str):
             raise ValueError('Invalid public metadata: ' + field)
-        if field != 'timeSource' and datetime.fromisoformat(value.replace('Z', '+00:00')).tzinfo is None:
-            raise ValueError('Public timestamp requires a timezone: ' + field)
+        if field != 'timeSource':
+            timestamps[field] = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            if timestamps[field].tzinfo is None:
+                raise ValueError('Public timestamp requires a timezone: ' + field)
+    if len(timestamps) == 2 and timestamps['endUtc'] < timestamps['startUtc']:
+        raise ValueError('Public end timestamp precedes start timestamp')
 
 def public_question(raw):
     if not isinstance(raw, dict) or not isinstance(raw.get('question'), str) or raw['question'] not in FAILED_IDS:
@@ -102,6 +107,8 @@ def public_question(raw):
         raise ValueError('Invalid public failedItems; expected reviewed question-specific IDs')
     if len(failed) != len(set(failed)):
         raise ValueError('Duplicate public failedItems identifier')
+    if failed and Fraction(raw['scoreExact']) == 1:
+        raise ValueError('Perfect public score contradicts failedItems')
     return {k: raw[k] for k in ROW if k in raw}
 
 def public_questions(raw):

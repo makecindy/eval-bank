@@ -52,7 +52,7 @@ class ExportTests(unittest.TestCase):
         if with_summaries:
             for name in export.REPORTS:
                 target = self.output / 'reports' / name / 'summary.json'
-                target.parent.mkdir(parents=True)
+                target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text('existing summary')
         before = {p: p.read_bytes() for p in self.archive.rglob('*.json')}
         public_before = {p: p.read_bytes() for p in self.output.rglob('*.json')}
@@ -351,6 +351,66 @@ class ExportTests(unittest.TestCase):
             target.write_text(json.dumps(raw))
             with self.subTest(question=question):
                 self.assert_failure_preserves()
+
+    def test_reversed_timestamps_preserve_all_outputs(self):
+        for status in ('graded', 'environment_invalid'):
+            for start, end in (
+                ('2026-09-24T00:00:00Z', '2026-09-23T23:59:59Z'),
+                ('2026-09-24T00:00:00-02:00', '2026-09-24T01:00:00Z'),
+                ('2026-09-24T01:00:00Z', '2026-09-24T02:00:00+02:00'),
+                ('2026-09-24T00:00:00.002Z', '2026-09-24T00:00:00.001Z'),
+            ):
+                with self.subTest(status=status, start=start, end=end):
+                    self.source.write_text(json.dumps({**self.valid_record, 'status': status,
+                                                      'startUtc': start, 'endUtc': end}))
+                    self.assert_failure_preserves(with_summaries=True)
+
+    def test_timestamp_order_preserves_original_offsets_and_missing_values(self):
+        for metadata in (
+            {'startUtc': '2026-09-24T00:00:00Z', 'endUtc': '2026-09-24T00:00:00+00:00'},
+            {'startUtc': '2026-09-24T02:00:00+02:00', 'endUtc': '2026-09-24T00:00:00Z'},
+            {'startUtc': '2026-09-24T00:00:00+02:00', 'endUtc': '2026-09-23T23:00:00Z'},
+            {'startUtc': '2026-09-24T00:00:00Z', 'endUtc': '2026-09-24T00:00:00.001Z'},
+            {'startUtc': None, 'endUtc': '2026-09-24T00:00:00Z'},
+            {'startUtc': '2026-09-24T00:00:00Z', 'endUtc': None},
+            {'startUtc': '2026-09-24T00:00:00Z'},
+            {'endUtc': '2026-09-24T00:00:00Z'},
+        ):
+            with self.subTest(metadata=metadata):
+                self.source.write_text(json.dumps({**self.valid_record, **metadata}))
+                result = self.run_export()
+                self.assertEqual(result.returncode, 0, result.stderr)
+                row = next(r for r in json.loads(self.target.read_text()) if r['runId'] == self.valid_record['runId'])
+                for field in ('startUtc', 'endUtc'):
+                    self.assertEqual(field in row, field in metadata)
+                    self.assertEqual(row.get(field), metadata.get(field))
+
+    def test_perfect_scores_with_failed_items_preserve_all_outputs(self):
+        target = self.archive / 'reports' / export.REPORTS[-1] / 'summary.json'
+        valid = json.loads(target.read_text())
+        for question, ids in export.FAILED_IDS.items():
+            if not ids:
+                continue
+            for exact in ('1', '1/1', '1.0', '2/2'):
+                with self.subTest(question=question, exact=exact):
+                    raw = json.loads(json.dumps(valid))
+                    row = next(q for q in raw['questions'] if q['question'] == question)
+                    row.update(scoreExact=exact, failedItems=[sorted(ids)[0]])
+                    raw.update(totalExact='3', total=3, meanExact='3/7', mean=3/7)
+                    target.write_text(json.dumps(raw))
+                    self.assert_failure_preserves(with_summaries=True)
+
+    def test_perfect_scores_without_failed_items_preserve_all_questions(self):
+        target = self.archive / 'reports' / export.REPORTS[-1] / 'summary.json'
+        raw = json.loads(target.read_text())
+        for index, row in enumerate(raw['questions']):
+            row.update(scoreExact=('1', '1/1', '1.0', '2/2')[index % 4], score=1, failedItems=[])
+        raw.update(totalExact='7', total=7, meanExact='1', mean=1)
+        target.write_text(json.dumps(raw))
+        result = self.run_export()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        published = json.loads((self.output / 'reports' / export.REPORTS[-1] / 'summary.json').read_text())
+        self.assertEqual(published['questions'], raw['questions'])
 
     def test_report_identity_mismatch_preserves_all_outputs(self):
         originals = {name: (self.archive / 'reports' / name / 'summary.json').read_bytes() for name in export.REPORTS}
