@@ -239,6 +239,38 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(self.run_export().returncode, 0)
         self.assertEqual(len(json.loads(self.target.read_text())), 2)
 
+    def test_optional_record_metadata_rejected_before_writes(self):
+        for field in ('startUtc', 'endUtc', 'timeSource'):
+            invalid = [[], {'diagnostic': 'SECRET'}, True, 12]
+            if field != 'timeSource':
+                invalid += ['not a timestamp', '2026-09-24T00:00:00']
+            for value in invalid:
+                with self.subTest(field=field, value=value):
+                    self.source.write_text(json.dumps({**self.valid_record, field: value}))
+                    self.assert_failure_preserves()
+        for metadata in ({}, {'startUtc': None, 'endUtc': None, 'timeSource': None},
+                         {'startUtc': '2026-09-24T00:00:00Z', 'endUtc': '2026-09-24T01:00:00+00:00',
+                          'timeSource': 'Worker reported UTC timestamps'}):
+            self.source.write_text(json.dumps({**self.valid_record, **metadata}))
+            self.assertEqual(self.run_export().returncode, 0)
+            row = json.loads(self.target.read_text())[0]
+            for field in ('startUtc', 'endUtc', 'timeSource'):
+                self.assertEqual(field in row, field in metadata)
+                self.assertEqual(row.get(field), metadata.get(field))
+
+    def test_duplicate_failed_ids_rejected_before_writes(self):
+        target = self.archive / 'reports' / export.REPORTS[-1] / 'summary.json'
+        valid = json.loads(target.read_text())
+        for question, ids in export.FAILED_IDS.items():
+            if not ids:
+                continue
+            raw = json.loads(json.dumps(valid))
+            row = next(q for q in raw['questions'] if q['question'] == question)
+            row['failedItems'] = [sorted(ids)[0]] * 2
+            target.write_text(json.dumps(raw))
+            with self.subTest(question=question):
+                self.assert_failure_preserves()
+
     def test_summary_metadata_required_before_replacement(self):
         target = self.archive / 'reports' / export.REPORTS[-1] / 'summary.json'
         valid = json.loads(target.read_text())
