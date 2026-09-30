@@ -25,9 +25,13 @@ class ExportTests(unittest.TestCase):
         self.output = self.root / 'public'
         self.source = self.archive / 'question-bank/results/one.json'
         self.source.parent.mkdir(parents=True)
+        public_records = json.loads((SCRIPT.parents[1] / 'results/historical-records.json').read_text(encoding='utf-8'))
+        self.run_ids = [row['runId'] for row in public_records]
         self.valid_record = {k: 'fixture' for k in export.IDENTITY}
-        self.valid_record.update(manifestSha256='a'*64, status='graded', scoreExact='1/3')
+        self.valid_record.update(runId=self.run_ids[0], manifestSha256='a'*64, status='graded', scoreExact='1/3')
         self.source.write_text(json.dumps({**self.valid_record, 'scoreExact': '1/3', 'items': {'B01': True}, 'regressions': {'R01': False}, 'privateNote': 'SECRET'}))
+        for index, run_id in enumerate(self.run_ids[1:]):
+            self.source.with_name(f'record-{index:03}.json').write_text(json.dumps({**self.valid_record, 'runId': run_id}))
         for name in export.REPORTS:
             p = self.archive / 'reports' / name / 'summary.json'
             p.parent.mkdir(parents=True)
@@ -44,7 +48,12 @@ class ExportTests(unittest.TestCase):
     def run_export(self, output=None):
         return subprocess.run([sys.executable, str(SCRIPT), str(self.archive), str(output or self.output)], capture_output=True)
 
-    def assert_failure_preserves(self, output=None):
+    def assert_failure_preserves(self, output=None, with_summaries=False):
+        if with_summaries:
+            for name in export.REPORTS:
+                target = self.output / 'reports' / name / 'summary.json'
+                target.parent.mkdir(parents=True)
+                target.write_text('existing summary')
         before = {p: p.read_bytes() for p in self.archive.rglob('*.json')}
         public_before = {p: p.read_bytes() for p in self.output.rglob('*.json')}
         self.assertNotEqual(self.run_export(output).returncode, 0)
@@ -173,8 +182,35 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(list(self.output.rglob('.history-export-*')), [])
 
     def test_missing_records(self):
-        self.source.unlink()
+        for source in self.source.parent.glob('*.json'):
+            source.unlink()
         self.assert_failure_preserves()
+
+    def test_one_missing_sealed_record_preserves_all_outputs(self):
+        self.source.unlink()
+        self.assert_failure_preserves(with_summaries=True)
+
+    def test_only_one_sealed_record_preserves_all_outputs(self):
+        for source in self.source.parent.glob('*.json'):
+            if source != self.source:
+                source.unlink()
+        self.assert_failure_preserves(with_summaries=True)
+
+    def test_same_count_wrong_run_id_preserves_all_outputs(self):
+        self.source.write_text(json.dumps({**self.valid_record, 'runId': 'unreviewed-replacement'}))
+        self.assert_failure_preserves(with_summaries=True)
+
+    def test_extra_run_id_preserves_all_outputs(self):
+        self.source.with_name('extra.json').write_text(json.dumps({**self.valid_record, 'runId': 'unreviewed-addition'}))
+        self.assert_failure_preserves(with_summaries=True)
+
+    def test_complete_set_accepts_renamed_source_files(self):
+        self.source.rename(self.source.with_name('z-renamed.json'))
+        result = self.run_export()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        records = json.loads(self.target.read_text())
+        self.assertEqual({row['runId'] for row in records}, set(self.run_ids))
+        self.assertEqual(len(records), 346)
 
     def test_missing_last_summary(self):
         (self.archive / 'reports' / export.REPORTS[-1] / 'summary.json').unlink()
@@ -210,9 +246,12 @@ class ExportTests(unittest.TestCase):
 
     def test_failed_item_values_rejected_before_writes(self):
         target = self.archive / 'reports' / export.REPORTS[-1] / 'summary.json'
+        valid = json.loads(target.read_text())
         for value in (None, 'I04', {}, [False], [['I04']], ['/private/path'], ['token=SECRET'], ['C09']):
             with self.subTest(value=value):
-                target.write_text(json.dumps({'questions': [{'question': 'island', 'scoreExact': '1/3', 'failedItems': value}]}))
+                raw = json.loads(json.dumps(valid))
+                next(row for row in raw['questions'] if row['question'] == 'island')['failedItems'] = value
+                target.write_text(json.dumps(raw))
                 self.assert_failure_preserves()
 
     def test_all_public_records_and_summaries_are_unchanged_by_validation(self):
@@ -238,8 +277,12 @@ class ExportTests(unittest.TestCase):
         self.assert_failure_preserves()
         raw['runId'] = 'distinct-run'
         copy.write_text(json.dumps(raw))
-        self.assertEqual(self.run_export().returncode, 0)
-        self.assertEqual(len(json.loads(self.target.read_text())), 2)
+        self.assert_failure_preserves()
+        copy.unlink()
+        # Matching file count must not permit one sealed ID to replace another.
+        raw['runId'] = self.run_ids[1]
+        self.source.write_text(json.dumps(raw))
+        self.assert_failure_preserves()
 
     def test_optional_record_metadata_rejected_before_writes(self):
         for field in ('startUtc', 'endUtc', 'timeSource'):

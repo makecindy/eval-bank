@@ -27,6 +27,9 @@ REPORT_IDENTITIES = {
     'seven-mimo26pro-default-concise-001': ('mimo-v2.6-pro', 'default'),
 }
 REPORTS = tuple(REPORT_IDENTITIES)
+# Sealed public run IDs: SHA-256 of sorted IDs as compact UTF-8 JSON.
+HISTORICAL_RECORD_COUNT = 346
+HISTORICAL_RUN_IDS_SHA256 = '8d5099523a2e550195b47db0e39de93a756cd7f7d860b0255eca456c8ec250f8'
 BUG_KEYS = {f'B{i:02}' for i in range(1, 7)} | {'B03b'}
 CHECK_KEYS = {
     'items': BUG_KEYS | {f'D{i:02}{part}' for i in range(1, 8) for part in ('a', 'b')}
@@ -178,8 +181,8 @@ def main():
     if overlap(archive, output):
         p.error('Output must not overlap the private archive')
     sources = sorted((archive/'question-bank/results').glob('*.json'))
-    if not sources:
-        p.error('No historical records found; refusing to replace public results')
+    if len(sources) != HISTORICAL_RECORD_COUNT:
+        p.error('Expected exactly 346 sealed historical records; refusing to replace public results')
     records=[]
     run_ids=set()
     for source in sources:
@@ -197,6 +200,9 @@ def main():
         row.setdefault('costUSD',None)
         row['evidenceAvailability']='Original evidence retained privately; not bundled in this export'
         records.append(row)
+    identity_bytes = json.dumps(sorted(run_ids), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+    if hashlib.sha256(identity_bytes).hexdigest() != HISTORICAL_RUN_IDS_SHA256:
+        p.error('Historical run IDs do not match the sealed set; refusing to replace public results')
     pending = [(output/'results/historical-records.json', records)]
     for name in REPORTS:
         raw=json.loads((archive/'reports'/name/'summary.json').read_text(encoding='utf-8'))
