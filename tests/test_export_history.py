@@ -116,7 +116,43 @@ class ExportTests(unittest.TestCase):
     def test_output_alias(self):
         alias = self.root / 'alias'
         alias.symlink_to(self.archive, target_is_directory=True)
-        self.assert_failure_preserves(alias)
+        for output in (alias, alias / 'export'):
+            with self.subTest(output=output):
+                self.assert_failure_preserves(output)
+
+    def test_selected_output_root_and_ancestor_aliases(self):
+        alias = self.root / 'alias'
+        alias.symlink_to(self.output, target_is_directory=True)
+        ancestor = self.root / 'ancestor'
+        ancestor.symlink_to(self.root, target_is_directory=True)
+        before = {p: p.read_bytes() for p in self.archive.rglob('*.json')}
+        for output in (alias, ancestor / self.output.name):
+            with self.subTest(output=output):
+                result = self.run_export(output)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(len(json.loads(self.target.read_text())), 346)
+                self.assertEqual(before, {p: p.read_bytes() for p in self.archive.rglob('*.json')})
+                for name in export.REPORTS:
+                    self.assertTrue((self.output / 'reports' / name / 'summary.json').is_file())
+
+    def test_derived_symlinks_to_independent_tree_preserve_both_outputs(self):
+        external = self.root / 'independent'
+        external.mkdir()
+        sentinel = external / 'sentinel.json'
+        sentinel.write_text('independent content')
+        linked_directory = self.output / 'reports'
+        linked_directory.symlink_to(external, target_is_directory=True)
+        self.assert_failure_preserves()
+        self.assertEqual(list(external.iterdir()), [sentinel])
+        self.assertEqual(sentinel.read_text(), 'independent content')
+        linked_directory.unlink()
+        self.target.unlink()
+        self.target.symlink_to(sentinel)
+        before = {p: p.read_bytes() for p in self.archive.rglob('*.json')}
+        self.assertNotEqual(self.run_export().returncode, 0)
+        self.assertTrue(self.target.is_symlink())
+        self.assertEqual(sentinel.read_text(), 'independent content')
+        self.assertEqual(before, {p: p.read_bytes() for p in self.archive.rglob('*.json')})
 
     def test_nested_symlink(self):
         (self.output / 'reports').symlink_to(self.archive / 'reports', target_is_directory=True)

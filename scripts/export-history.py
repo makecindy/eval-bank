@@ -1,8 +1,10 @@
 """Export reviewed structural fields only; never publish logs or session bodies.
 
 Run only in trusted local trees whose contents and directory structure remain
-unchanged for the duration of the export. Path checks prevent accidental aliases;
-they are not a security boundary against concurrent filesystem modification.
+unchanged for the duration of the export. Supplied roots are resolved first:
+root and ancestor aliases are allowed unless the resolved trees overlap.
+Paths derived beneath the resolved output root must not contain symlinks.
+These checks are not a security boundary against concurrent modification.
 Export to a maintainer-owned review directory, not a live deployment tree.
 Replacement preserves POSIX mode bits, not ownership, ACLs or extended attributes.
 """
@@ -211,14 +213,14 @@ def main():
         row['questions']=public_questions(raw)
         row['costUSD']=None
         pending.append((output/'reports'/name/'summary.json', row))
-    # Validate all inputs and destinations before the first write, including
-    # aliases in existing output trees. Reject symlinks present at validation.
+    # The selected root aliases have already been resolved. Before writing,
+    # reject symlinks in the paths derived beneath that canonical output root.
     # The caller must keep the trusted tree unchanged until export finishes.
     for path, _ in pending:
         if overlap(archive, path.resolve()):
             p.error('Output destination overlaps the private archive')
         if any(part.is_symlink() for part in (path, *path.parents)):
-            p.error('Output destinations must not contain symlinks')
+            p.error('Paths beneath the resolved output root must not contain symlinks')
         if path.exists() and (not path.is_file() or path.stat().st_nlink != 1):
             p.error('Output destination must be a regular file with a single link')
     # Finish every serialization and write before replacing any public file.
