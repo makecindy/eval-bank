@@ -21,7 +21,12 @@ from pathlib import Path
 FIELDS = ('runId','configurationId','model','harness','effort','questionId','revision','manifestSha256','scoreExact','score','status','sampleKind','executionChannel','startUtc','endUtc','timeSource','costUSD','items','regressions')
 SUMMARY = ('status','model','harness','effort','fast','suite','condition','timeLimitInPrompt','completedAt','totalExact','total','maximum','meanExact','mean','limitations','promptNormalization')
 ROW = ('question','name','scoreExact','score','executionChannel','failedItems')
-REPORTS = ('seven-luna-high-concise-001','seven-grok47-high-concise-001','seven-mimo26pro-default-concise-001')
+REPORT_IDENTITIES = {
+    'seven-luna-high-concise-001': ('gpt-6-luna', 'high'),
+    'seven-grok47-high-concise-001': ('grok-4.7', 'high'),
+    'seven-mimo26pro-default-concise-001': ('mimo-v2.6-pro', 'default'),
+}
+REPORTS = tuple(REPORT_IDENTITIES)
 BUG_KEYS = {f'B{i:02}' for i in range(1, 7)} | {'B03b'}
 CHECK_KEYS = {
     'items': BUG_KEYS | {f'D{i:02}{part}' for i in range(1, 8) for part in ('a', 'b')}
@@ -84,6 +89,9 @@ def public_question(raw):
     if not isinstance(raw, dict) or not isinstance(raw.get('question'), str) or raw['question'] not in FAILED_IDS:
         raise ValueError('Invalid public summary question')
     validate_score(raw)
+    for field in ('name', 'executionChannel'):
+        if field in raw and not isinstance(raw[field], str):
+            raise ValueError('Invalid public question text: ' + field)
     failed = raw.get('failedItems')
     if not isinstance(failed, list) or any(not isinstance(item, str) or item not in FAILED_IDS[raw['question']] for item in failed):
         raise ValueError('Invalid public failedItems; expected reviewed question-specific IDs')
@@ -109,7 +117,7 @@ def public_questions(raw):
             raise ValueError('Inconsistent summary numeric aggregate')
     return rows
 
-def validate_summary(raw):
+def validate_summary(raw, report_name):
     if not isinstance(raw, dict):
         raise ValueError('Invalid summary object')
     for field in ('model', 'effort', 'suite', 'condition', 'completedAt'):
@@ -120,8 +128,17 @@ def validate_summary(raw):
     for field in ('fast', 'timeLimitInPrompt'):
         if type(raw.get(field)) is not bool:
             raise ValueError('Invalid summary boolean: ' + field)
+    identity = tuple(raw[field] for field in ('model', 'effort', 'suite', 'condition', 'fast', 'timeLimitInPrompt'))
+    expected = (*REPORT_IDENTITIES[report_name], 'seven-question-quality-v2', 'concise-prompt-v1', False, False)
+    if identity != expected:
+        raise ValueError('Summary does not match report identity: ' + report_name)
     if 'harness' in raw and (not isinstance(raw['harness'], str) or not raw['harness'].strip()):
         raise ValueError('Invalid summary harness')
+    if 'promptNormalization' in raw and not isinstance(raw['promptNormalization'], str):
+        raise ValueError('Invalid summary promptNormalization')
+    if 'limitations' in raw and (not isinstance(raw['limitations'], list) or
+                                any(not isinstance(item, str) for item in raw['limitations'])):
+        raise ValueError('Invalid summary limitations; expected text list')
     if datetime.fromisoformat(raw['completedAt'].replace('Z', '+00:00')).tzinfo is None:
         raise ValueError('Summary completion time requires a timezone')
 
@@ -183,7 +200,7 @@ def main():
     pending = [(output/'results/historical-records.json', records)]
     for name in REPORTS:
         raw=json.loads((archive/'reports'/name/'summary.json').read_text(encoding='utf-8'))
-        validate_summary(raw)
+        validate_summary(raw, name)
         row={k:raw[k] for k in SUMMARY if k in raw}
         row['questions']=public_questions(raw)
         row['costUSD']=None

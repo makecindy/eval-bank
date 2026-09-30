@@ -31,8 +31,8 @@ class ExportTests(unittest.TestCase):
         for name in export.REPORTS:
             p = self.archive / 'reports' / name / 'summary.json'
             p.parent.mkdir(parents=True)
-            p.write_text(json.dumps({'status': 'complete', 'model': 'fixture', 'effort': 'high',
-                                    'suite': 'fixture', 'condition': 'fixture', 'fast': False,
+            identity = json.loads((SCRIPT.parents[1] / 'reports' / name / 'summary.json').read_text(encoding='utf-8'))
+            p.write_text(json.dumps({'status': 'complete', **{k: identity[k] for k in ('model','effort','suite','condition')}, 'fast': False,
                                     'timeLimitInPrompt': False, 'completedAt': '2026-09-24T00:00:00Z',
                                     'maximum': 7, 'totalExact': '7/3', 'total': 7/3,
                                     'meanExact': '1/3', 'mean': 1/3,
@@ -46,9 +46,11 @@ class ExportTests(unittest.TestCase):
 
     def assert_failure_preserves(self, output=None):
         before = {p: p.read_bytes() for p in self.archive.rglob('*.json')}
+        public_before = {p: p.read_bytes() for p in self.output.rglob('*.json')}
         self.assertNotEqual(self.run_export(output).returncode, 0)
         self.assertEqual(self.target.read_text(), 'existing results')
         self.assertEqual(before, {p: p.read_bytes() for p in self.archive.rglob('*.json')})
+        self.assertEqual(public_before, {p: p.read_bytes() for p in self.output.rglob('*.json')})
 
     def test_valid_export(self):
         self.assertEqual(self.run_export().returncode, 0)
@@ -222,7 +224,7 @@ class ExportTests(unittest.TestCase):
         for name in export.REPORTS:
             raw = json.loads((SCRIPT.parents[1] / 'reports' / name / 'summary.json').read_text(encoding='utf-8'))
             before = json.dumps(raw)
-            export.validate_summary(raw)
+            export.validate_summary(raw, name)
             self.assertEqual(export.public_questions(raw), raw['questions'])
             self.assertEqual(json.dumps(raw), before)
 
@@ -270,6 +272,60 @@ class ExportTests(unittest.TestCase):
             target.write_text(json.dumps(raw))
             with self.subTest(question=question):
                 self.assert_failure_preserves()
+
+    def test_report_identity_mismatch_preserves_all_outputs(self):
+        originals = {name: (self.archive / 'reports' / name / 'summary.json').read_bytes() for name in export.REPORTS}
+        for name in export.REPORTS:
+            target = self.output / 'reports' / name / 'summary.json'
+            target.parent.mkdir(parents=True)
+            target.write_text('existing summary')
+        before = {p: p.read_bytes() for p in self.output.rglob('*.json')}
+        for destination in export.REPORTS:
+            target = self.archive / 'reports' / destination / 'summary.json'
+            valid = json.loads(originals[destination])
+            candidates = [json.loads(data) for name, data in originals.items() if name != destination]
+            candidates += [{**valid, field: value} for field, value in (
+                ('model', 'another-model'), ('effort', 'another-effort'), ('suite', 'another-suite'),
+                ('condition', 'another-condition'), ('fast', True), ('timeLimitInPrompt', True))]
+            for raw in candidates:
+                with self.subTest(destination=destination, raw=raw):
+                    target.write_text(json.dumps(raw))
+                    self.assert_failure_preserves()
+                    self.assertEqual(before, {p: p.read_bytes() for p in self.output.rglob('*.json')})
+            target.write_bytes(originals[destination])
+
+    def test_optional_summary_text_shapes_preserve_outputs(self):
+        target = self.archive / 'reports' / export.REPORTS[-1] / 'summary.json'
+        valid = json.loads(target.read_text())
+        for name in export.REPORTS:
+            existing = self.output / 'reports' / name / 'summary.json'
+            existing.parent.mkdir(parents=True)
+            existing.write_text('existing summary')
+        for field in ('name', 'executionChannel', 'limitations', 'promptNormalization'):
+            values = (None, False, 12, {'privateNote': 'SECRET'}, ['SECRET'])
+            if field == 'limitations':
+                values = (None, False, 12, 'SECRET', [{'privateNote': 'SECRET'}], [12], [['SECRET']])
+            for value in values:
+                with self.subTest(field=field, value=value):
+                    raw = json.loads(json.dumps(valid))
+                    container = raw['questions'][0] if field in ('name', 'executionChannel') else raw
+                    container[field] = value
+                    target.write_text(json.dumps(raw))
+                    self.assert_failure_preserves()
+        # Optional fields stay absent, or retain their exact reviewed strings and order.
+        for present in (False, True):
+            raw = json.loads(json.dumps(valid))
+            if present:
+                raw.update(limitations=['reviewed note', ''], promptNormalization='reviewed normalization')
+                raw['questions'][0].update(name='中文题目', executionChannel='Orca Worker')
+            target.write_text(json.dumps(raw, ensure_ascii=False), encoding='utf-8')
+            result = self.run_export()
+            self.assertEqual(result.returncode, 0, result.stderr)
+            published = json.loads((self.output / 'reports' / export.REPORTS[-1] / 'summary.json').read_text(encoding='utf-8'))
+            self.assertEqual(published['questions'], raw['questions'])
+            for field in ('limitations', 'promptNormalization'):
+                self.assertEqual(field in published, field in raw)
+                self.assertEqual(published.get(field), raw.get(field))
 
     def test_summary_metadata_required_before_replacement(self):
         target = self.archive / 'reports' / export.REPORTS[-1] / 'summary.json'
