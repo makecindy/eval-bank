@@ -516,6 +516,7 @@ class ExportTests(unittest.TestCase):
             ):
                 with self.subTest(status=status, start=start, end=end):
                     self.source.write_text(json.dumps({**self.valid_record, 'status': status,
+                                                      'scoreExact': None if status == 'environment_invalid' else '1/3',
                                                       'startUtc': start, 'endUtc': end}))
                     self.assert_failure_preserves(with_summaries=True)
 
@@ -661,13 +662,78 @@ class ExportTests(unittest.TestCase):
             raw = {**self.valid_record, 'score': 1/3, 'costUSD': cost}
             export.validate_record(raw)
 
+    def test_environment_invalid_scores_preserve_all_outputs(self):
+        scores = [{'scoreExact': exact, **numeric}
+                  for exact, value in (('0', 0), ('1/3', 1/3), ('1', 1))
+                  for numeric in ({}, {'score': None}, {'score': value})]
+        scores += [{'scoreExact': None, 'score': value} for value in (0, 1/3, 1)]
+        for fields in scores:
+            with self.subTest(fields=fields):
+                self.target.write_text('existing results')
+                self.source.write_text(json.dumps({**self.valid_record, 'status': 'environment_invalid', **fields}))
+                self.assert_failure_preserves(with_summaries=True)
+
+    def test_environment_invalid_score_does_not_create_output_tree(self):
+        output = self.root / 'not-created' / 'public'
+        self.source.write_text(json.dumps({**self.valid_record, 'status': 'environment_invalid', 'scoreExact': '0', 'score': 0}))
+        self.assert_failure_preserves(output)
+        self.assertFalse(output.parent.exists())
+
+    def test_scored_records_and_summary_questions_preserve_score_representations(self):
+        summary = self.archive / 'reports' / export.REPORTS[-1] / 'summary.json'
+        valid = json.loads(summary.read_text())
+        for exact, value, total in (('0', 0, '0'), ('1/3', 1/3, '7/3'), ('1', 1, '7')):
+            for numeric in ({}, {'score': None}, {'score': value}):
+                with self.subTest(exact=exact, numeric=numeric):
+                    raw = {**self.valid_record, 'scoreExact': exact, **numeric}
+                    self.source.write_text(json.dumps(raw))
+                    report = json.loads(json.dumps(valid))
+                    for row in report['questions']:
+                        row.update(scoreExact=exact, **numeric)
+                    report.update(totalExact=total, total=value*7, meanExact=exact, mean=value)
+                    summary.write_text(json.dumps(report))
+                    result = self.run_export()
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    published = next(r for r in json.loads(self.target.read_text()) if r['runId'] == raw['runId'])
+                    self.assertEqual({k: published[k] for k in raw}, raw)
+                    self.assertEqual('score' in published, 'score' in numeric)
+                    published_summary = json.loads((self.output / 'reports' / export.REPORTS[-1] / 'summary.json').read_text())
+                    self.assertEqual(published_summary['questions'], report['questions'])
+
+    def test_required_exact_scores_remain_required(self):
+        for status in ('graded', 'environment_invalid'):
+            for fields in ({}, {'score': None}, {'scoreExact': None, 'score': None}):
+                if status == 'environment_invalid' and 'scoreExact' in fields:
+                    continue  # This is the valid unscored representation.
+                with self.subTest(status=status, fields=fields):
+                    raw = {k: v for k, v in self.valid_record.items() if k != 'scoreExact'}
+                    self.source.write_text(json.dumps({**raw, 'status': status, **fields}))
+                    self.assert_failure_preserves(with_summaries=True)
+        self.source.write_text(json.dumps(self.valid_record))
+        summary = self.archive / 'reports' / export.REPORTS[-1] / 'summary.json'
+        valid = json.loads(summary.read_text())
+        for missing in (True, False):
+            with self.subTest(summary_missing_exact=missing):
+                raw = json.loads(json.dumps(valid))
+                row = raw['questions'][0]
+                if missing:
+                    del row['scoreExact']
+                else:
+                    row['scoreExact'] = None
+                summary.write_text(json.dumps(raw))
+                self.assert_failure_preserves(with_summaries=True)
+
     def test_nullable_environment_score_and_optional_checks_preserved(self):
-        row = {**self.valid_record, 'status': 'environment_invalid', 'scoreExact': None, 'items': None, 'regressions': None}
-        self.source.write_text(json.dumps(row))
-        self.assertEqual(self.run_export().returncode, 0)
-        result = json.loads(self.target.read_text())
-        for field in ('scoreExact', 'items', 'regressions'):
-            self.assertIsNone(result[0][field])
+        for numeric in ({}, {'score': None}):
+            with self.subTest(numeric=numeric):
+                row = {**self.valid_record, 'status': 'environment_invalid', 'scoreExact': None,
+                       'items': None, 'regressions': None, **numeric}
+                self.source.write_text(json.dumps(row))
+                result = self.run_export()
+                self.assertEqual(result.returncode, 0, result.stderr)
+                published = next(r for r in json.loads(self.target.read_text()) if r['runId'] == row['runId'])
+                self.assertEqual({k: published[k] for k in row}, row)
+                self.assertEqual('score' in published, 'score' in numeric)
 
 
 if __name__ == '__main__':

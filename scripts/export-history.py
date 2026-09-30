@@ -113,6 +113,8 @@ def validate_record(raw):
         raise ValueError('Public manifest hash does not match historical question revision')
     if raw.get('status') not in ('graded', 'environment_invalid'):
         raise ValueError('Invalid public result status')
+    if raw['status'] == 'environment_invalid' and any(raw.get(field) is not None for field in ('scoreExact', 'score')):
+        raise ValueError('Environment-invalid public record must not contain a score')
     validate_score(raw, nullable=raw['status'] == 'environment_invalid')
     cost = raw.get('costUSD')
     if cost is not None and (type(cost) not in (int, float) or not math.isfinite(cost) or cost < 0):
