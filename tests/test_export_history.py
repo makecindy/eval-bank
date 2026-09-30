@@ -27,8 +27,9 @@ class ExportTests(unittest.TestCase):
         self.source.parent.mkdir(parents=True)
         public_records = json.loads((SCRIPT.parents[1] / 'results/historical-records.json').read_text(encoding='utf-8'))
         self.run_ids = [row['runId'] for row in public_records]
+        self.manifest_hashes = {(row['questionId'], row['revision']): row['manifestSha256'] for row in public_records}
         self.valid_record = {k: 'fixture' for k in export.IDENTITY}
-        self.valid_record.update(runId=self.run_ids[0], manifestSha256='a'*64, status='graded', scoreExact='1/3',
+        self.valid_record.update(runId=self.run_ids[0], manifestSha256=self.manifest_hashes['task-switch-cache', 'v1'], status='graded', scoreExact='1/3',
                                  configurationId='gpt-6-astra / codex / medium', model='gpt-6-astra',
                                  harness='codex', effort='medium', questionId='task-switch-cache', revision='v1')
         self.source.write_text(json.dumps({**self.valid_record, 'scoreExact': '1/3', 'items': {'D01a': True}, 'regressions': {'R01': False}, 'privateNote': 'SECRET'}))
@@ -268,6 +269,25 @@ class ExportTests(unittest.TestCase):
                 if field in row:
                     self.assertEqual(export.checks(row, field), row[field])
 
+    def test_mismatched_manifest_hashes_preserve_all_outputs(self):
+        rubrics = sorted(self.manifest_hashes)
+        for index, (question, revision) in enumerate(rubrics):
+            other_hash = self.manifest_hashes[rubrics[(index + 1) % len(rubrics)]]
+            for manifest_hash in ('0' * 64, other_hash):
+                for status in ('graded', 'environment_invalid'):
+                    with self.subTest(question=question, revision=revision, hash=manifest_hash, status=status):
+                        raw = {**self.valid_record, 'questionId': question, 'revision': revision,
+                               'manifestSha256': manifest_hash, 'status': status,
+                               'scoreExact': None if status == 'environment_invalid' else '1/3'}
+                        self.source.write_text(json.dumps(raw))
+                        self.assert_failure_preserves(with_summaries=True)
+
+    def test_manifest_mismatch_does_not_create_output_tree(self):
+        output = self.root / 'not-created' / 'public'
+        self.source.write_text(json.dumps({**self.valid_record, 'manifestSha256': '0' * 64}))
+        self.assert_failure_preserves(output)
+        self.assertFalse(output.parent.exists())
+
     def test_contradictory_configuration_fields_preserve_all_outputs(self):
         for model in ('gpt-6-astra', 'moonshot/kimi-k3'):
             for separator in (' / ', '/', '|'):
@@ -304,7 +324,8 @@ class ExportTests(unittest.TestCase):
         for question, revision, item_id, regression_id in cases:
             for field, key in (('items', item_id), ('regressions', regression_id)):
                 with self.subTest(question=question, revision=revision, field=field, key=key):
-                    raw = {**self.valid_record, 'questionId': question, 'revision': revision, field: {key: True}}
+                    raw = {**self.valid_record, 'questionId': question, 'revision': revision,
+                           'manifestSha256': self.manifest_hashes[question, revision], field: {key: True}}
                     self.source.write_text(json.dumps(raw))
                     self.assert_failure_preserves(with_summaries=True)
         for question, revision in (('unknown', 'v1'), ('task-switch-cache', 'unknown')):
@@ -329,7 +350,8 @@ class ExportTests(unittest.TestCase):
             for diagnostics in ({}, {'items': None, 'regressions': None},
                                 {'items': items, 'regressions': regressions}):
                 with self.subTest(question=question, revision=revision, diagnostics=diagnostics):
-                    raw = {**self.valid_record, 'questionId': question, 'revision': revision, **diagnostics}
+                    raw = {**self.valid_record, 'questionId': question, 'revision': revision,
+                           'manifestSha256': self.manifest_hashes[question, revision], **diagnostics}
                     self.source.write_text(json.dumps(raw))
                     result = self.run_export()
                     self.assertEqual(result.returncode, 0, result.stderr)

@@ -36,17 +36,35 @@ BUG_KEYS = {f'B{i:02}' for i in range(1, 7)} | {'B03b'}
 REMOTE_ITEMS = {f'V{i:02}{part}' for i in range(1, 5) for part in ('core', 'edge', 'guard')}
 CACHE_ITEMS = {f'V{i:02}{part}' for i in range(1, 8) for part in ('core', 'edge', 'guard')}
 REGRESSION_KEYS = {f'R{i:02}' for i in range(1, 5)}
-# Only diagnostics reviewed in this sealed batch, scoped to their original rubric.
-CHECK_KEYS = {
-    **{(q, 'legacy-normalized-v1'): {'items': set(), 'regressions': set()}
-       for q in ('audio', 'composer', 'island', 'mobile-stream-order', 'recovery')},
-    ('remote-files-bughunt', 'v1'): {'items': set(), 'regressions': set()},
-    ('remote-files-bughunt', 'v2'): {'items': REMOTE_ITEMS, 'regressions': BUG_KEYS | {'R01', 'R03'}},
-    ('remote-files-bughunt', 'v3'): {'items': REMOTE_ITEMS | BUG_KEYS, 'regressions': BUG_KEYS | {'R01', 'R03'}},
+# One fixed source for the manifest and diagnostics reviewed for each rubric.
+# These are sealed public identities, not hashes recomputed from mutable output.
+HISTORICAL_RUBRICS = {
+    **{(q, 'legacy-normalized-v1'): {'manifestSha256': manifest_hash, 'items': set(), 'regressions': set()}
+       for q, manifest_hash in (
+           ('audio', 'b46ce3fa18a7ddd030c5aee2d4c1188aa37b87ca3fab15c54a4ae39e1748bfbd'),
+           ('composer', 'f61555ebdedcdd196aea0d55f4c230c4f2a68949f4e48d85b02871df488f2ed2'),
+           ('island', 'd5cd13aa759845398e6c6375a9b4c5f818dd54ba7f09a9b5b984c67eb7ccd769'),
+           ('mobile-stream-order', '3b60a8127dfbe08f15bf6bdc71898c2e603e6eb552653fb89ab18aaf281c0ece'),
+           ('recovery', 'db43ea6a2fd7b7ed18e7da0c7e32e7daaf6d4644834a8bfcd164aa359c026263'),
+       )},
+    ('remote-files-bughunt', 'v1'): {
+        'manifestSha256': 'a5977e61a2793f39f03beeba5fea5875c501d330048e23c0e33a680f7fa2941d',
+        'items': set(), 'regressions': set()},
+    ('remote-files-bughunt', 'v2'): {
+        'manifestSha256': 'd7750f2e2f423b8f5d6cd0c395b012122adde859432b0d34df6280997f1a846e',
+        'items': REMOTE_ITEMS, 'regressions': BUG_KEYS | {'R01', 'R03'}},
+    ('remote-files-bughunt', 'v3'): {
+        'manifestSha256': 'e917b86d816c7a3ab2339a184dda6eb1d8d591cb4e6d1985967f48984566ca24',
+        'items': REMOTE_ITEMS | BUG_KEYS, 'regressions': BUG_KEYS | {'R01', 'R03'}},
     ('task-switch-cache', 'v1'): {
+        'manifestSha256': 'f33341b55bfb1fd452ed20e3e539cb38044fbe2c1f92265a53f7d016f7bd6477',
         'items': {f'D{i:02}{part}' for i in range(1, 8) for part in ('a', 'b')}, 'regressions': REGRESSION_KEYS},
-    ('task-switch-cache', 'v2'): {'items': CACHE_ITEMS, 'regressions': REGRESSION_KEYS},
-    ('task-switch-cache', 'v2.1'): {'items': CACHE_ITEMS, 'regressions': REGRESSION_KEYS},
+    ('task-switch-cache', 'v2'): {
+        'manifestSha256': '775ce54a5ef7271944fbb1ef9f8851a85ce53cd959449472960d416341c31f5e',
+        'items': CACHE_ITEMS, 'regressions': REGRESSION_KEYS},
+    ('task-switch-cache', 'v2.1'): {
+        'manifestSha256': '53de3a9523eb93be0aa36b8407e4e3694b4c9d291d8cd484a959f677816ff38c',
+        'items': CACHE_ITEMS, 'regressions': REGRESSION_KEYS},
 }
 
 # Frozen historical schema, not a general-purpose diagnostic exporter.
@@ -87,10 +105,11 @@ def validate_record(raw):
     # Compare complete strings: model names may themselves contain a slash.
     if raw['configurationId'] not in {separator.join(configuration) for separator in (' / ', '/', '|')}:
         raise ValueError('Public configurationId contradicts model, harness or effort')
-    if (raw['questionId'], raw['revision']) not in CHECK_KEYS:
+    rubric = HISTORICAL_RUBRICS.get((raw['questionId'], raw['revision']))
+    if rubric is None:
         raise ValueError('Unknown historical question revision')
-    if not re.fullmatch(r'[a-f0-9]{64}', raw['manifestSha256']):
-        raise ValueError('Invalid public manifest hash')
+    if raw['manifestSha256'] != rubric['manifestSha256']:
+        raise ValueError('Public manifest hash does not match historical question revision')
     if raw.get('status') not in ('graded', 'environment_invalid'):
         raise ValueError('Invalid public result status')
     validate_score(raw, nullable=raw['status'] == 'environment_invalid')
@@ -174,7 +193,7 @@ def overlap(left, right):
     return left == right or left in right.parents or right in left.parents
 
 def checks(raw, field):
-    allowed = CHECK_KEYS[(raw['questionId'], raw['revision'])][field]
+    allowed = HISTORICAL_RUBRICS[(raw['questionId'], raw['revision'])][field]
     value = raw[field]
     if value is None:
         return None
