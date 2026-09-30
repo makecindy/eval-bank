@@ -28,8 +28,10 @@ class ExportTests(unittest.TestCase):
         public_records = json.loads((SCRIPT.parents[1] / 'results/historical-records.json').read_text(encoding='utf-8'))
         self.run_ids = [row['runId'] for row in public_records]
         self.valid_record = {k: 'fixture' for k in export.IDENTITY}
-        self.valid_record.update(runId=self.run_ids[0], manifestSha256='a'*64, status='graded', scoreExact='1/3')
-        self.source.write_text(json.dumps({**self.valid_record, 'scoreExact': '1/3', 'items': {'B01': True}, 'regressions': {'R01': False}, 'privateNote': 'SECRET'}))
+        self.valid_record.update(runId=self.run_ids[0], manifestSha256='a'*64, status='graded', scoreExact='1/3',
+                                 configurationId='gpt-6-astra / codex / medium', model='gpt-6-astra',
+                                 harness='codex', effort='medium', questionId='task-switch-cache', revision='v1')
+        self.source.write_text(json.dumps({**self.valid_record, 'scoreExact': '1/3', 'items': {'D01a': True}, 'regressions': {'R01': False}, 'privateNote': 'SECRET'}))
         for index, run_id in enumerate(self.run_ids[1:]):
             self.source.with_name(f'record-{index:03}.json').write_text(json.dumps({**self.valid_record, 'runId': run_id}))
         for name in export.REPORTS:
@@ -65,7 +67,7 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(self.run_export().returncode, 0)
         result = json.loads(self.target.read_text())[0]
         self.assertEqual(result['scoreExact'], '1/3')
-        self.assertEqual(result['items'], {'B01': True})
+        self.assertEqual(result['items'], {'D01a': True})
         self.assertNotIn('SECRET', self.target.read_text())
 
     @unittest.skipUnless(os.name == 'posix', 'POSIX file-mode semantics')
@@ -253,8 +255,8 @@ class ExportTests(unittest.TestCase):
         self.assert_failure_preserves()
 
     def test_nested_unreviewed_fields(self):
-        for field in ('items', 'regressions'):
-            for value in ({'B01': 'SECRET'}, {'private/path': True}, {'B01': {'details': 'SECRET'}}, ['SECRET']):
+        for field, key in (('items', 'D01a'), ('regressions', 'R01')):
+            for value in ({key: 'SECRET'}, {'private/path': True}, {key: {'details': 'SECRET'}}, ['SECRET']):
                 with self.subTest(field=field, value=value):
                     self.source.write_text(json.dumps({**self.valid_record, field: value}))
                     self.assert_failure_preserves()
@@ -262,9 +264,79 @@ class ExportTests(unittest.TestCase):
     def test_existing_public_checks_accepted_without_change(self):
         records = json.loads((SCRIPT.parents[1] / 'results/historical-records.json').read_text())
         for row in records:
-            for field in export.CHECK_KEYS:
+            for field in ('items', 'regressions'):
                 if field in row:
                     self.assertEqual(export.checks(row, field), row[field])
+
+    def test_contradictory_configuration_fields_preserve_all_outputs(self):
+        for model in ('gpt-6-astra', 'moonshot/kimi-k3'):
+            for separator in (' / ', '/', '|'):
+                valid = {**self.valid_record, 'model': model,
+                         'configurationId': separator.join((model, 'codex', 'medium'))}
+                for field in ('configurationId', 'model', 'harness', 'effort'):
+                    with self.subTest(model=model, separator=separator, field=field):
+                        self.source.write_text(json.dumps({**valid, field: 'other-' + valid[field]}))
+                        self.assert_failure_preserves(with_summaries=True)
+
+    def test_legacy_configuration_formats_preserve_original_strings(self):
+        for model in ('gpt-6-astra', 'moonshot/kimi-k3'):
+            for separator in (' / ', '/', '|'):
+                with self.subTest(model=model, separator=separator):
+                    raw = {**self.valid_record, 'model': model,
+                           'configurationId': separator.join((model, 'codex', 'medium'))}
+                    self.source.write_text(json.dumps(raw))
+                    result = self.run_export()
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    row = next(r for r in json.loads(self.target.read_text()) if r['runId'] == raw['runId'])
+                    self.assertEqual({k: row[k] for k in raw}, raw)
+
+    def test_checks_from_other_questions_or_revisions_preserve_all_outputs(self):
+        cases = [
+            ('task-switch-cache', 'v1', 'V01core', 'B01'),
+            ('task-switch-cache', 'v2', 'D01a', 'B01'),
+            ('task-switch-cache', 'v2.1', 'D01a', 'B01'),
+            ('remote-files-bughunt', 'v1', 'B01', 'R01'),
+            ('remote-files-bughunt', 'v2', 'B01', 'R02'),
+            ('remote-files-bughunt', 'v3', 'V05core', 'R04'),
+            *((q, 'legacy-normalized-v1', 'B01', 'R01') for q in
+              ('audio', 'composer', 'island', 'mobile-stream-order', 'recovery')),
+        ]
+        for question, revision, item_id, regression_id in cases:
+            for field, key in (('items', item_id), ('regressions', regression_id)):
+                with self.subTest(question=question, revision=revision, field=field, key=key):
+                    raw = {**self.valid_record, 'questionId': question, 'revision': revision, field: {key: True}}
+                    self.source.write_text(json.dumps(raw))
+                    self.assert_failure_preserves(with_summaries=True)
+        for question, revision in (('unknown', 'v1'), ('task-switch-cache', 'unknown')):
+            for diagnostics in ({}, {'items': None}, {'items': {}}):
+                with self.subTest(question=question, revision=revision, diagnostics=diagnostics):
+                    self.source.write_text(json.dumps({**self.valid_record, 'questionId': question,
+                                                      'revision': revision, **diagnostics}))
+                    self.assert_failure_preserves(with_summaries=True)
+
+    def test_known_rubrics_preserve_optional_checks_and_subsets(self):
+        cases = [
+            ('task-switch-cache', 'v1', {'D01a': True}, {'R04': False}),
+            ('task-switch-cache', 'v2', {'V07guard': False}, {'R02': True}),
+            ('task-switch-cache', 'v2.1', {'V07edge': True}, {'R03': False}),
+            ('remote-files-bughunt', 'v2', {'V04guard': True}, {'B03b': False}),
+            ('remote-files-bughunt', 'v3', {'B03b': True}, {'R03': False}),
+            ('remote-files-bughunt', 'v1', {}, {}),
+            *((q, 'legacy-normalized-v1', {}, {}) for q in
+              ('audio', 'composer', 'island', 'mobile-stream-order', 'recovery')),
+        ]
+        for question, revision, items, regressions in cases:
+            for diagnostics in ({}, {'items': None, 'regressions': None},
+                                {'items': items, 'regressions': regressions}):
+                with self.subTest(question=question, revision=revision, diagnostics=diagnostics):
+                    raw = {**self.valid_record, 'questionId': question, 'revision': revision, **diagnostics}
+                    self.source.write_text(json.dumps(raw))
+                    result = self.run_export()
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    row = next(r for r in json.loads(self.target.read_text()) if r['runId'] == raw['runId'])
+                    self.assertEqual({k: row[k] for k in raw}, raw)
+                    for field in ('items', 'regressions'):
+                        self.assertEqual(field in row, field in raw)
 
     def test_incomplete_or_wrong_record_rejected_before_writes(self):
         candidates = [{}, [], None]

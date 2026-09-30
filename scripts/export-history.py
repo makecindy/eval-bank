@@ -33,10 +33,20 @@ REPORTS = tuple(REPORT_IDENTITIES)
 HISTORICAL_RECORD_COUNT = 346
 HISTORICAL_RUN_IDS_SHA256 = '8d5099523a2e550195b47db0e39de93a756cd7f7d860b0255eca456c8ec250f8'
 BUG_KEYS = {f'B{i:02}' for i in range(1, 7)} | {'B03b'}
+REMOTE_ITEMS = {f'V{i:02}{part}' for i in range(1, 5) for part in ('core', 'edge', 'guard')}
+CACHE_ITEMS = {f'V{i:02}{part}' for i in range(1, 8) for part in ('core', 'edge', 'guard')}
+REGRESSION_KEYS = {f'R{i:02}' for i in range(1, 5)}
+# Only diagnostics reviewed in this sealed batch, scoped to their original rubric.
 CHECK_KEYS = {
-    'items': BUG_KEYS | {f'D{i:02}{part}' for i in range(1, 8) for part in ('a', 'b')}
-             | {f'V{i:02}{part}' for i in range(1, 8) for part in ('core', 'edge', 'guard')},
-    'regressions': BUG_KEYS | {f'R{i:02}' for i in range(1, 5)},
+    **{(q, 'legacy-normalized-v1'): {'items': set(), 'regressions': set()}
+       for q in ('audio', 'composer', 'island', 'mobile-stream-order', 'recovery')},
+    ('remote-files-bughunt', 'v1'): {'items': set(), 'regressions': set()},
+    ('remote-files-bughunt', 'v2'): {'items': REMOTE_ITEMS, 'regressions': BUG_KEYS | {'R01', 'R03'}},
+    ('remote-files-bughunt', 'v3'): {'items': REMOTE_ITEMS | BUG_KEYS, 'regressions': BUG_KEYS | {'R01', 'R03'}},
+    ('task-switch-cache', 'v1'): {
+        'items': {f'D{i:02}{part}' for i in range(1, 8) for part in ('a', 'b')}, 'regressions': REGRESSION_KEYS},
+    ('task-switch-cache', 'v2'): {'items': CACHE_ITEMS, 'regressions': REGRESSION_KEYS},
+    ('task-switch-cache', 'v2.1'): {'items': CACHE_ITEMS, 'regressions': REGRESSION_KEYS},
 }
 
 # Frozen historical schema, not a general-purpose diagnostic exporter.
@@ -73,6 +83,12 @@ def validate_score(raw, nullable=False):
 def validate_record(raw):
     if not isinstance(raw, dict) or any(not isinstance(raw.get(k), str) or not raw[k].strip() for k in IDENTITY):
         raise ValueError('Missing or invalid public result identity')
+    configuration = tuple(raw[field] for field in ('model', 'harness', 'effort'))
+    # Compare complete strings: model names may themselves contain a slash.
+    if raw['configurationId'] not in {separator.join(configuration) for separator in (' / ', '/', '|')}:
+        raise ValueError('Public configurationId contradicts model, harness or effort')
+    if (raw['questionId'], raw['revision']) not in CHECK_KEYS:
+        raise ValueError('Unknown historical question revision')
     if not re.fullmatch(r'[a-f0-9]{64}', raw['manifestSha256']):
         raise ValueError('Invalid public manifest hash')
     if raw.get('status') not in ('graded', 'environment_invalid'):
@@ -158,11 +174,12 @@ def overlap(left, right):
     return left == right or left in right.parents or right in left.parents
 
 def checks(raw, field):
+    allowed = CHECK_KEYS[(raw['questionId'], raw['revision'])][field]
     value = raw[field]
     if value is None:
         return None
     if not isinstance(value, dict) or any(
-        key not in CHECK_KEYS[field] or type(item) is not bool
+        key not in allowed or type(item) is not bool
         for key, item in value.items()
     ):
         raise ValueError(f'Invalid public {field}; expected reviewed check IDs and booleans')
@@ -202,7 +219,7 @@ def main():
             raise ValueError('Duplicate historical runId')
         run_ids.add(raw['runId'])
         row={k:raw[k] for k in FIELDS if k in raw}
-        for field in CHECK_KEYS:
+        for field in ('items', 'regressions'):
             if field in raw:
                 row[field] = checks(raw, field)
         row['sourceRecordSha256']=hashlib.sha256(source_bytes).hexdigest()
