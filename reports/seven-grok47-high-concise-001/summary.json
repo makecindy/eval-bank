@@ -1,0 +1,88 @@
+{
+  "status": "complete",
+  "model": "grok-4.7",
+  "effort": "high",
+  "fast": false,
+  "suite": "seven-question-quality-v2",
+  "condition": "concise-prompt-v1",
+  "timeLimitInPrompt": false,
+  "completedAt": "2026-09-24T22:18:37.181713+00:00",
+  "totalExact": "1487/220",
+  "total": 6.759090909090909,
+  "maximum": 7,
+  "meanExact": "1487/1540",
+  "mean": 0.9655844155844155,
+  "limitations": [
+    "Single independent Orca Worker sample per question, not repeated-run population estimate",
+    "Concise prompt overlay authorized; frozen grader and business inputs unchanged",
+    "Worker self-tests not scores; independent frozen grader results used",
+    "Token and cost not collected in this report"
+  ],
+  "promptNormalization": "Original submissions retained; only authorized TASK.md/PROMPT.md overlays restored in separate grading copies for protected-input gate",
+  "questions": [
+    {
+      "question": "audio",
+      "name": "音频 v2",
+      "scoreExact": "1",
+      "score": 1.0,
+      "executionChannel": "Orca Worker",
+      "failedItems": []
+    },
+    {
+      "question": "island",
+      "name": "灵动岛 v2",
+      "scoreExact": "10/11",
+      "score": 0.9090909090909091,
+      "executionChannel": "Orca Worker",
+      "failedItems": [
+        "I06"
+      ]
+    },
+    {
+      "question": "recovery",
+      "name": "自动恢复 v2",
+      "scoreExact": "1",
+      "score": 1.0,
+      "executionChannel": "Orca Worker",
+      "failedItems": []
+    },
+    {
+      "question": "composer",
+      "name": "输入框发送 v2",
+      "scoreExact": "1",
+      "score": 1.0,
+      "executionChannel": "Orca Worker",
+      "failedItems": []
+    },
+    {
+      "question": "mobile-stream-order",
+      "name": "手机消息顺序 v3",
+      "scoreExact": "1",
+      "score": 1.0,
+      "executionChannel": "Orca Worker",
+      "failedItems": []
+    },
+    {
+      "question": "remote-files-bughunt",
+      "name": "远程文件 v4",
+      "scoreExact": "17/20",
+      "score": 0.85,
+      "executionChannel": "Orca Worker",
+      "failedItems": [
+        "V02core",
+        "V02edge",
+        "V03edge",
+        "V03guard"
+      ]
+    },
+    {
+      "question": "task-switch-cache",
+      "name": "D02 v3",
+      "scoreExact": "1",
+      "score": 1.0,
+      "executionChannel": "Orca Worker",
+      "failedItems": []
+    }
+  ],
+  "costUSD": null
+}
