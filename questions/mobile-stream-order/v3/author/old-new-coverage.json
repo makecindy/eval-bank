@@ -1,0 +1,40 @@
+{
+  "previous": "legacy-normalized-v1",
+  "current": "v3",
+  "principle": "all prior scored capabilities retained; extra scenarios combine actual supported events; no model scores inferred",
+  "sourceScope": "apps/mobile/src/session/ 与 packages/maker-shared/src/ 中的历史、交接、消息渲染实现",
+  "groups": [
+    {
+      "id": "C01",
+      "weight": "1/4",
+      "mode": "all",
+      "items": [
+        "C01"
+      ]
+    },
+    {
+      "id": "C02",
+      "weight": "1/4",
+      "mode": "all",
+      "items": [
+        "C02"
+      ]
+    },
+    {
+      "id": "C03",
+      "weight": "1/4",
+      "mode": "all",
+      "items": [
+        "C03"
+      ]
+    },
+    {
+      "id": "C04",
+      "weight": "1/4",
+      "mode": "all",
+      "items": [
+        "C04"
+      ]
+    }
+  ]
+}

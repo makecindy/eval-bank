@@ -1,0 +1,172 @@
+{
+  "id": "recovery",
+  "revision": "v2",
+  "title": "协作 Worker 生命周期与自动恢复：质量与组合场景升级",
+  "scoringVersion": "quality-composition-v1",
+  "groups": [
+    {
+      "id": "R01",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R01"
+      ]
+    },
+    {
+      "id": "R02",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R02"
+      ]
+    },
+    {
+      "id": "R03",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R03"
+      ]
+    },
+    {
+      "id": "R04",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R04"
+      ]
+    },
+    {
+      "id": "R06",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R06"
+      ]
+    },
+    {
+      "id": "R07",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R07"
+      ]
+    },
+    {
+      "id": "R08",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R08"
+      ]
+    },
+    {
+      "id": "R09",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R09"
+      ]
+    },
+    {
+      "id": "R10",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R10"
+      ]
+    },
+    {
+      "id": "R11",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R11"
+      ]
+    },
+    {
+      "id": "R12",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R12"
+      ]
+    },
+    {
+      "id": "R13",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R13"
+      ]
+    },
+    {
+      "id": "R14",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R14"
+      ]
+    },
+    {
+      "id": "R15",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R15"
+      ]
+    },
+    {
+      "id": "R16",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R16"
+      ]
+    },
+    {
+      "id": "R17",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R17"
+      ]
+    },
+    {
+      "id": "R18",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R18"
+      ]
+    },
+    {
+      "id": "R19",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R19"
+      ]
+    },
+    {
+      "id": "R20",
+      "weight": "1/19",
+      "mode": "all",
+      "items": [
+        "R20"
+      ]
+    }
+  ],
+  "changeNote": "Restore complete executable assets; retain prior capabilities and add event-composition checks; publish product choices before testing.",
+  "environment": "macOS arm64 bundled Node/TypeScript; real register/coordinator/Orca, virtual timer and explicit boundary adapters",
+  "graderCommand": [
+    "python3",
+    "-B",
+    "author/grade.py",
+    "{candidateRoot}",
+    "{outputJson}"
+  ],
+  "legacyAdapter": "data/current-results.json contributions plus source grade-result where absent",
+  "supersedes": "legacy-normalized-v1",
+  "status": "frozen"
+}

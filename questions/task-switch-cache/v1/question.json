@@ -1,0 +1,87 @@
+{
+  "id": "task-switch-cache",
+  "revision": "v1",
+  "title": "任务切换缓存与性能自主查错",
+  "scoringVersion": "capability-groups-v1",
+  "environment": "macOS arm64 Node v22.23.2 bundled; exact selected historical business functions; vendored Markdown modules; no React/Electron/network",
+  "changeNote": "首版：真实历史业务依赖闭包封装，七组人工植入；0/7、7/7及七份单修1/7已实跑校准。原六题不变。",
+  "groups": [
+    {
+      "id": "D01",
+      "name": "共享解析与负结果复用",
+      "weight": "1/7",
+      "mode": "all",
+      "items": [
+        "D01a",
+        "D01b"
+      ]
+    },
+    {
+      "id": "D02",
+      "name": "返回结果所有权",
+      "weight": "1/7",
+      "mode": "all",
+      "items": [
+        "D02a",
+        "D02b"
+      ]
+    },
+    {
+      "id": "D03",
+      "name": "语义输入失效",
+      "weight": "1/7",
+      "mode": "all",
+      "items": [
+        "D03a",
+        "D03b"
+      ]
+    },
+    {
+      "id": "D04",
+      "name": "卡片快照失效",
+      "weight": "1/7",
+      "mode": "all",
+      "items": [
+        "D04a",
+        "D04b"
+      ]
+    },
+    {
+      "id": "D05",
+      "name": "数据属主代次隔离",
+      "weight": "1/7",
+      "mode": "all",
+      "items": [
+        "D05a",
+        "D05b"
+      ]
+    },
+    {
+      "id": "D06",
+      "name": "最近使用与跨挂载复用",
+      "weight": "1/7",
+      "mode": "all",
+      "items": [
+        "D06a",
+        "D06b"
+      ]
+    },
+    {
+      "id": "D07",
+      "name": "缓存保留上限",
+      "weight": "1/7",
+      "mode": "all",
+      "items": [
+        "D07a",
+        "D07b"
+      ]
+    }
+  ],
+  "status": "calibrated",
+  "graderCommand": [
+    "python3",
+    "author/grade.py",
+    "{candidateRoot}",
+    "{outputJson}"
+  ]
+}

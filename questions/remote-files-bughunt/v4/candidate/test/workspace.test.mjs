@@ -1,0 +1,18 @@
+import {test,after} from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {createWorkspace} from '../runtime/workspace.mjs';
+import {createFileReadQueue,readDeviceFile} from '../src/transport/fileAccess.ts';
+import {toWorkdirRel} from '../src/path/workdirPath.ts';
+const data=await fs.mkdtemp(path.join(os.tmpdir(),'workspace-smoke-'));process.env.PROJECT_DATA_DIR=data;
+after(async()=>{await new Promise(r=>setTimeout(r,50));await fs.rm(data,{recursive:true,force:true})});
+const w=createWorkspace('demo-device','fixtures/site');
+test('lists a project directory',async()=>assert.ok((await w.list()).some(x=>x.name==='index.html')));
+test('reads a text file through local cache',async()=>{const p=await w.read('notes.txt');assert.match(await fs.readFile(p,'utf8'),/normal project note/);assert.equal(await w.read('notes.txt'),p)});
+test('opens HTML and linked JavaScript',async()=>{const p=await w.preview('index.html');try{const r=await fetch(p.url,{redirect:'manual'});assert.equal(r.status,302);const cookie=r.headers.get('set-cookie').split(';')[0];for(const rel of ['/index.html','/dist/app.js']){const x=await fetch(new URL(rel,p.url),{headers:{cookie}});assert.equal(x.status,200);assert.ok((await x.text()).length)}}finally{await p.close()}});
+test('requires preview authentication',async()=>{const p=await w.preview('index.html');try{const r=await fetch(new URL('/index.html',p.url));assert.equal(r.status,403)}finally{await p.close()}});
+test('serializes successful jobs',async()=>{const q=createFileReadQueue();const seen=[];const a=q('device',async()=>{seen.push('a');return 1});const b=q('device',async()=>{seen.push('b');return 2});assert.deepEqual(await Promise.all([a,b]),[1,2]);assert.deepEqual(seen,['a','b'])});
+test('handles ordinary POSIX and Windows paths',()=>{assert.equal(toWorkdirRel('/repo','/repo/out/page.html'),'out/page.html');assert.equal(toWorkdirRel('C:\\repo','c:\\repo\\out\\page.html'),'out/page.html')});
+test('uses direct prepared file data when available',async()=>{const result={ossKey:'',size:3,mimeType:'text/plain',inlineBase64:'YWJj'};assert.equal(await readDeviceFile({prepare:async()=>result,peer:async()=>{throw Error('unexpected')},fallback:async()=>{throw Error('unexpected')}}),result)});

@@ -1,0 +1,14 @@
+{
+  "status": "graded",
+  "score": 0.25,
+  "scoreExact": "1/4",
+  "items": {
+    "C01": false,
+    "C02": false,
+    "C03": true,
+    "C04": false
+  },
+  "questionId": "mobile-stream-order",
+  "revision": "v3",
+  "scoringVersion": "quality-composition-v1"
+}

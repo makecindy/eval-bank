@@ -1,0 +1,1 @@
+export const i18n={language:"en",t:(key,...args)=>key};

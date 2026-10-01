@@ -1,0 +1,172 @@
+{
+  "id": "remote-files-bughunt",
+  "revision": "v4",
+  "supersedes": "v3",
+  "scoringVersion": "quality-composition-v1",
+  "title": "远程文件工作区：质量与组合场景升级",
+  "changeNote": "Restore complete executable assets; retain prior capabilities and add event-composition checks; publish product choices before testing.",
+  "environment": "Node 22+ strip-types, real local fs and loopback HTTP; no real remote/Electron",
+  "graderCommand": [
+    "python3",
+    "-B",
+    "author/grade.py",
+    "{candidateRoot}",
+    "{outputJson}"
+  ],
+  "groups": [
+    {
+      "id": "B01",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B01"
+      ]
+    },
+    {
+      "id": "B02",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B02"
+      ]
+    },
+    {
+      "id": "B03",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B03",
+        "B03b"
+      ]
+    },
+    {
+      "id": "B04",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B04"
+      ]
+    },
+    {
+      "id": "B05",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B05"
+      ]
+    },
+    {
+      "id": "B06",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B06"
+      ]
+    },
+    {
+      "id": "V01-core",
+      "weight": "1/20",
+      "mode": "all",
+      "items": [
+        "V01core"
+      ]
+    },
+    {
+      "id": "V01-edge",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V01core",
+        "V01edge"
+      ]
+    },
+    {
+      "id": "V01-guard",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V01core",
+        "V01guard"
+      ]
+    },
+    {
+      "id": "V02-core",
+      "weight": "1/20",
+      "mode": "all",
+      "items": [
+        "V02core"
+      ]
+    },
+    {
+      "id": "V02-edge",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V02core",
+        "V02edge"
+      ]
+    },
+    {
+      "id": "V02-guard",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V02core",
+        "V02guard"
+      ]
+    },
+    {
+      "id": "V03-core",
+      "weight": "1/20",
+      "mode": "all",
+      "items": [
+        "V03core"
+      ]
+    },
+    {
+      "id": "V03-edge",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V03core",
+        "V03edge"
+      ]
+    },
+    {
+      "id": "V03-guard",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V03core",
+        "V03guard"
+      ]
+    },
+    {
+      "id": "V04-core",
+      "weight": "1/20",
+      "mode": "all",
+      "items": [
+        "V04core"
+      ]
+    },
+    {
+      "id": "V04-edge",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V04core",
+        "V04edge"
+      ]
+    },
+    {
+      "id": "V04-guard",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V04core",
+        "V04guard"
+      ]
+    }
+  ],
+  "status": "frozen"
+}

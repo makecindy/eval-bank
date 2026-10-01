@@ -1,0 +1,128 @@
+[
+  {
+    "id": "audio",
+    "revision": "legacy-normalized-v1",
+    "importOnly": true,
+    "sourceManifestSha256": "b46ce3fa18a7ddd030c5aee2d4c1188aa37b87ca3fab15c54a4ae39e1748bfbd",
+    "publishedRuntime": false
+  },
+  {
+    "id": "audio",
+    "revision": "v2",
+    "importOnly": false,
+    "sourceManifestSha256": "ab707d5c130fb3ab63e624360dae364297ccdefe54adb1c63a679e3acb81b399",
+    "publishedRuntime": true
+  },
+  {
+    "id": "composer",
+    "revision": "legacy-normalized-v1",
+    "importOnly": true,
+    "sourceManifestSha256": "f61555ebdedcdd196aea0d55f4c230c4f2a68949f4e48d85b02871df488f2ed2",
+    "publishedRuntime": false
+  },
+  {
+    "id": "composer",
+    "revision": "v2",
+    "importOnly": false,
+    "sourceManifestSha256": "80b77bb41ffad003dfeba8fc45d2493712ac488991823d51164683a8e77c95b2",
+    "publishedRuntime": true
+  },
+  {
+    "id": "island",
+    "revision": "legacy-normalized-v1",
+    "importOnly": true,
+    "sourceManifestSha256": "d5cd13aa759845398e6c6375a9b4c5f818dd54ba7f09a9b5b984c67eb7ccd769",
+    "publishedRuntime": false
+  },
+  {
+    "id": "island",
+    "revision": "v2",
+    "importOnly": false,
+    "sourceManifestSha256": "0003d57cd5043226e24ba37c8a94f3346be1500cd8c796465c326477b3b77415",
+    "publishedRuntime": true
+  },
+  {
+    "id": "mobile-stream-order",
+    "revision": "legacy-normalized-v1",
+    "importOnly": true,
+    "sourceManifestSha256": "3b60a8127dfbe08f15bf6bdc71898c2e603e6eb552653fb89ab18aaf281c0ece",
+    "publishedRuntime": false
+  },
+  {
+    "id": "mobile-stream-order",
+    "revision": "v3",
+    "importOnly": false,
+    "sourceManifestSha256": "26084bd3112336037fa9c129d1762fbed6af6fa79dc67bc052b45257dac16c23",
+    "publishedRuntime": true
+  },
+  {
+    "id": "recovery",
+    "revision": "legacy-normalized-v1",
+    "importOnly": true,
+    "sourceManifestSha256": "db43ea6a2fd7b7ed18e7da0c7e32e7daaf6d4644834a8bfcd164aa359c026263",
+    "publishedRuntime": false
+  },
+  {
+    "id": "recovery",
+    "revision": "v2",
+    "importOnly": false,
+    "sourceManifestSha256": "f2c0797185aa65d31bb5ae49a0e190f9e4809030102fd3c1e30cf1c5ea807a7e",
+    "publishedRuntime": true
+  },
+  {
+    "id": "remote-files-bughunt",
+    "revision": "v1",
+    "importOnly": false,
+    "sourceManifestSha256": "a5977e61a2793f39f03beeba5fea5875c501d330048e23c0e33a680f7fa2941d",
+    "publishedRuntime": false
+  },
+  {
+    "id": "remote-files-bughunt",
+    "revision": "v2",
+    "importOnly": false,
+    "sourceManifestSha256": "d7750f2e2f423b8f5d6cd0c395b012122adde859432b0d34df6280997f1a846e",
+    "publishedRuntime": false
+  },
+  {
+    "id": "remote-files-bughunt",
+    "revision": "v3",
+    "importOnly": false,
+    "sourceManifestSha256": "e917b86d816c7a3ab2339a184dda6eb1d8d591cb4e6d1985967f48984566ca24",
+    "publishedRuntime": false
+  },
+  {
+    "id": "remote-files-bughunt",
+    "revision": "v4",
+    "importOnly": false,
+    "sourceManifestSha256": "8858c36536848e4f21852333723ce635b1f7cb0e499cdbb523e47711a1a406c0",
+    "publishedRuntime": true
+  },
+  {
+    "id": "task-switch-cache",
+    "revision": "v1",
+    "importOnly": false,
+    "sourceManifestSha256": "f33341b55bfb1fd452ed20e3e539cb38044fbe2c1f92265a53f7d016f7bd6477",
+    "publishedRuntime": false
+  },
+  {
+    "id": "task-switch-cache",
+    "revision": "v2",
+    "importOnly": false,
+    "sourceManifestSha256": "775ce54a5ef7271944fbb1ef9f8851a85ce53cd959449472960d416341c31f5e",
+    "publishedRuntime": false
+  },
+  {
+    "id": "task-switch-cache",
+    "revision": "v2.1",
+    "importOnly": false,
+    "sourceManifestSha256": "53de3a9523eb93be0aa36b8407e4e3694b4c9d291d8cd484a959f677816ff38c",
+    "publishedRuntime": false
+  },
+  {
+    "id": "task-switch-cache",
+    "revision": "v3",
+    "importOnly": false,
+    "sourceManifestSha256": "b1ef9e738204c45f31bdebeb1918e3c429e38530d39019acc04476fb85f319e0",
+    "publishedRuntime": true
+  }
+]

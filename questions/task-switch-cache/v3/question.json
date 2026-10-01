@@ -1,0 +1,80 @@
+{
+  "id": "task-switch-cache",
+  "revision": "v3",
+  "supersedes": "v2.1",
+  "scoringVersion": "quality-composition-v1",
+  "title": "消息投影与多层缓存：质量与组合场景升级",
+  "status": "frozen",
+  "changeNote": "Restore complete executable assets; retain prior capabilities and add event-composition checks; publish product choices before testing.",
+  "environment": "macOS arm64 bundled Node; historical production pure business closure, no React/Electron/network",
+  "graderCommand": [
+    "python3",
+    "-B",
+    "author/grade.py",
+    "{candidateRoot}",
+    "{outputJson}"
+  ],
+  "groups": [
+    {
+      "id": "parsing",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "parsing-negative",
+        "parsing-markdown"
+      ]
+    },
+    {
+      "id": "media",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "media-array-isolation",
+        "media-handoff"
+      ]
+    },
+    {
+      "id": "projection",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "projection-context",
+        "projection-internal-change"
+      ]
+    },
+    {
+      "id": "cards",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "cards-snapshot",
+        "cards-ownership"
+      ]
+    },
+    {
+      "id": "owner",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "owner-generation"
+      ]
+    },
+    {
+      "id": "bounded-reuse",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "bounded-reuse-lru",
+        "bounded-reuse-quotas",
+        "bounded-reuse-accounting"
+      ]
+    }
+  ],
+  "regressionItems": [
+    "R01",
+    "R02",
+    "R03",
+    "R04"
+  ],
+  "sourceCommit": "2e660c3bebcb1f902f37d0a1c089e788f31f4807"
+}

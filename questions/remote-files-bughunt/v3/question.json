@@ -1,0 +1,172 @@
+{
+  "id": "remote-files-bughunt",
+  "revision": "v3",
+  "title": "远程文件自主查错：累加扩充版",
+  "supersedes": "v2",
+  "scoringVersion": "additive-gated-v3",
+  "environment": "Node 22+ strip-types, real local fs and loopback HTTP; no real remote/Electron",
+  "changeNote": "纠正v2专项替换：保留v1六个缺陷并增加PR4919四组；十组等权，仍每题1分。题面不告知数量、位置或修复提示。",
+  "groups": [
+    {
+      "id": "B01",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B01"
+      ]
+    },
+    {
+      "id": "B02",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B02"
+      ]
+    },
+    {
+      "id": "B03",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B03",
+        "B03b"
+      ]
+    },
+    {
+      "id": "B04",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B04"
+      ]
+    },
+    {
+      "id": "B05",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B05"
+      ]
+    },
+    {
+      "id": "B06",
+      "weight": "1/10",
+      "mode": "all",
+      "items": [
+        "B06"
+      ]
+    },
+    {
+      "id": "V01-core",
+      "weight": "1/20",
+      "mode": "all",
+      "items": [
+        "V01core"
+      ]
+    },
+    {
+      "id": "V01-edge",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V01core",
+        "V01edge"
+      ]
+    },
+    {
+      "id": "V01-guard",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V01core",
+        "V01guard"
+      ]
+    },
+    {
+      "id": "V02-core",
+      "weight": "1/20",
+      "mode": "all",
+      "items": [
+        "V02core"
+      ]
+    },
+    {
+      "id": "V02-edge",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V02core",
+        "V02edge"
+      ]
+    },
+    {
+      "id": "V02-guard",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V02core",
+        "V02guard"
+      ]
+    },
+    {
+      "id": "V03-core",
+      "weight": "1/20",
+      "mode": "all",
+      "items": [
+        "V03core"
+      ]
+    },
+    {
+      "id": "V03-edge",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V03core",
+        "V03edge"
+      ]
+    },
+    {
+      "id": "V03-guard",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V03core",
+        "V03guard"
+      ]
+    },
+    {
+      "id": "V04-core",
+      "weight": "1/20",
+      "mode": "all",
+      "items": [
+        "V04core"
+      ]
+    },
+    {
+      "id": "V04-edge",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V04core",
+        "V04edge"
+      ]
+    },
+    {
+      "id": "V04-guard",
+      "weight": "1/40",
+      "mode": "all",
+      "items": [
+        "V04core",
+        "V04guard"
+      ]
+    }
+  ],
+  "status": "frozen",
+  "graderCommand": [
+    "python3",
+    "-B",
+    "author/grade.py",
+    "{candidateRoot}",
+    "{outputJson}"
+  ]
+}

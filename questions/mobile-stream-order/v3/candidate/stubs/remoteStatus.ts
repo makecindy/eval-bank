@@ -1,0 +1,1 @@
+export const describeAgentAuthError=(x)=>String(x??"");

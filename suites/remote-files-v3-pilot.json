@@ -1,0 +1,11 @@
+{
+  "id": "remote-files-v3-pilot",
+  "rule": "equal-question-mean-v1",
+  "questions": [
+    {
+      "id": "remote-files-bughunt",
+      "revision": "v3",
+      "manifestSha256": "e917b86d816c7a3ab2339a184dda6eb1d8d591cb4e6d1985967f48984566ca24"
+    }
+  ]
+}

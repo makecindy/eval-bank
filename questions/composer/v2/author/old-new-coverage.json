@@ -1,0 +1,63 @@
+{
+  "previous": "legacy-normalized-v1",
+  "current": "v2",
+  "principle": "all prior scored capabilities retained; extra scenarios combine actual supported events; no model scores inferred",
+  "sourceScope": "apps/desktop/src/renderer/ 中与输入框发送及草稿生命周期相关的实现",
+  "groups": [
+    {
+      "id": "immediate-clear",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C01"
+      ]
+    },
+    {
+      "id": "failure-recovery",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C04",
+        "C05"
+      ]
+    },
+    {
+      "id": "next-draft",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C03",
+        "C06",
+        "C10"
+      ]
+    },
+    {
+      "id": "task-isolation",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C07",
+        "C08",
+        "C09"
+      ]
+    },
+    {
+      "id": "home-handoff",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C11",
+        "C12",
+        "C13"
+      ]
+    },
+    {
+      "id": "focus",
+      "weight": "1/6",
+      "mode": "ratio",
+      "items": [
+        "C17"
+      ]
+    }
+  ]
+}

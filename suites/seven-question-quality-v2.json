@@ -1,0 +1,41 @@
+{
+  "id": "seven-question-quality-v2",
+  "rule": "equal-question-mean-v1",
+  "questions": [
+    {
+      "id": "audio",
+      "revision": "v2",
+      "manifestSha256": "ab707d5c130fb3ab63e624360dae364297ccdefe54adb1c63a679e3acb81b399"
+    },
+    {
+      "id": "island",
+      "revision": "v2",
+      "manifestSha256": "0003d57cd5043226e24ba37c8a94f3346be1500cd8c796465c326477b3b77415"
+    },
+    {
+      "id": "recovery",
+      "revision": "v2",
+      "manifestSha256": "f2c0797185aa65d31bb5ae49a0e190f9e4809030102fd3c1e30cf1c5ea807a7e"
+    },
+    {
+      "id": "composer",
+      "revision": "v2",
+      "manifestSha256": "80b77bb41ffad003dfeba8fc45d2493712ac488991823d51164683a8e77c95b2"
+    },
+    {
+      "id": "mobile-stream-order",
+      "revision": "v3",
+      "manifestSha256": "26084bd3112336037fa9c129d1762fbed6af6fa79dc67bc052b45257dac16c23"
+    },
+    {
+      "id": "remote-files-bughunt",
+      "revision": "v4",
+      "manifestSha256": "8858c36536848e4f21852333723ce635b1f7cb0e499cdbb523e47711a1a406c0"
+    },
+    {
+      "id": "task-switch-cache",
+      "revision": "v3",
+      "manifestSha256": "b1ef9e738204c45f31bdebeb1918e3c429e38530d39019acc04476fb85f319e0"
+    }
+  ]
+}

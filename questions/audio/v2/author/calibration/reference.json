@@ -1,0 +1,18 @@
+{
+  "status": "graded",
+  "score": 1.0,
+  "scoreExact": "1",
+  "items": {
+    "A01": true,
+    "A02": true,
+    "A03": true,
+    "A04": true,
+    "A05": true,
+    "A06": true,
+    "A07": true,
+    "A08": true
+  },
+  "questionId": "audio",
+  "revision": "v2",
+  "scoringVersion": "quality-composition-v1"
+}

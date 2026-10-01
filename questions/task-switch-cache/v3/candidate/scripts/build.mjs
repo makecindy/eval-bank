@@ -1,0 +1,1 @@
+await import('../src/entry.js'); console.log('Projection modules parsed and loaded');

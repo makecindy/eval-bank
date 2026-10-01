@@ -1,0 +1,138 @@
+{
+  "tests": [
+    {
+      "path": "worklet",
+      "rate": 48000,
+      "chunkMs": 40,
+      "operations": [
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "flush",
+          "flushId": "demo"
+        }
+      ]
+    },
+    {
+      "path": "fallback",
+      "rate": 48000,
+      "chunkMs": 40,
+      "operations": [
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "input",
+          "samples": [
+            0.375,
+            0.375
+          ]
+        },
+        {
+          "type": "flush",
+          "flushId": "demo"
+        }
+      ]
+    }
+  ]
+}

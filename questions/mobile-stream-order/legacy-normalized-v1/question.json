@@ -1,0 +1,23 @@
+{
+  "id": "mobile-stream-order",
+  "revision": "legacy-normalized-v1",
+  "title": "手机消息顺序",
+  "scoringVersion": "frozen-coverage-v1",
+  "environment": "见原题包环境说明；旧题为历史归一评分适配器，完整可运行新版须重新登记候选和校准。",
+  "changeNote": "历史统一口径迁入；不宣称历史作答用同一物理题包。",
+  "groups": [
+    {
+      "id": "frozen-coverage",
+      "weight": "1",
+      "mode": "ratio",
+      "items": [
+        "item-01",
+        "item-02",
+        "item-03",
+        "item-04"
+      ]
+    }
+  ],
+  "importOnly": true,
+  "graderCommand": []
+}

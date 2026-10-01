@@ -1,0 +1,135 @@
+{
+  "id": "remote-files-bughunt",
+  "revision": "v2",
+  "title": "远程文件自主查错：版本与取消生命周期",
+  "supersedes": "v1",
+  "scoringVersion": "gated-core-edge-guard-v2",
+  "environment": "Node 22+ strip-types, real local fs and loopback HTTP; no real remote/Electron",
+  "changeNote": "基于真实PR4919修复前后源码，旧六项作为回归保护；四组核心50%边界25%保护25%，共1分。",
+  "groups": [
+    {
+      "id": "V01-core",
+      "name": "并发版本与容量回收 core",
+      "weight": "1/8",
+      "mode": "all",
+      "items": [
+        "V01core"
+      ]
+    },
+    {
+      "id": "V01-edge",
+      "name": "并发版本与容量回收 edge",
+      "weight": "1/16",
+      "mode": "all",
+      "items": [
+        "V01core",
+        "V01edge"
+      ]
+    },
+    {
+      "id": "V01-guard",
+      "name": "并发版本与容量回收 guard",
+      "weight": "1/16",
+      "mode": "all",
+      "items": [
+        "V01core",
+        "V01guard"
+      ]
+    },
+    {
+      "id": "V02-core",
+      "name": "取消世代与发布隔离 core",
+      "weight": "1/8",
+      "mode": "all",
+      "items": [
+        "V02core"
+      ]
+    },
+    {
+      "id": "V02-edge",
+      "name": "取消世代与发布隔离 edge",
+      "weight": "1/16",
+      "mode": "all",
+      "items": [
+        "V02core",
+        "V02edge"
+      ]
+    },
+    {
+      "id": "V02-guard",
+      "name": "取消世代与发布隔离 guard",
+      "weight": "1/16",
+      "mode": "all",
+      "items": [
+        "V02core",
+        "V02guard"
+      ]
+    },
+    {
+      "id": "V03-core",
+      "name": "精确版本和离线兼容 core",
+      "weight": "1/8",
+      "mode": "all",
+      "items": [
+        "V03core"
+      ]
+    },
+    {
+      "id": "V03-edge",
+      "name": "精确版本和离线兼容 edge",
+      "weight": "1/16",
+      "mode": "all",
+      "items": [
+        "V03core",
+        "V03edge"
+      ]
+    },
+    {
+      "id": "V03-guard",
+      "name": "精确版本和离线兼容 guard",
+      "weight": "1/16",
+      "mode": "all",
+      "items": [
+        "V03core",
+        "V03guard"
+      ]
+    },
+    {
+      "id": "V04-core",
+      "name": "多字节文件名 core",
+      "weight": "1/8",
+      "mode": "all",
+      "items": [
+        "V04core"
+      ]
+    },
+    {
+      "id": "V04-edge",
+      "name": "多字节文件名 edge",
+      "weight": "1/16",
+      "mode": "all",
+      "items": [
+        "V04core",
+        "V04edge"
+      ]
+    },
+    {
+      "id": "V04-guard",
+      "name": "多字节文件名 guard",
+      "weight": "1/16",
+      "mode": "all",
+      "items": [
+        "V04core",
+        "V04guard"
+      ]
+    }
+  ],
+  "status": "calibrated",
+  "graderCommand": [
+    "python3",
+    "-B",
+    "author/grade.py",
+    "{candidateRoot}",
+    "{outputJson}"
+  ]
+}
